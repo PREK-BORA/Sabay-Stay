@@ -1,107 +1,223 @@
 <template>
-  <div class="p-6 bg-gray-50 min-h-screen">
-    <!-- Header & Action Button -->
-    <div class="flex justify-between items-center mb-6">
+  <div class="p-8 max-w-6xl mx-auto space-y-6">
+    <!-- Top Bar -->
+    <div class="flex justify-between items-center">
       <div>
         <h1 class="text-3xl font-serif font-bold text-gray-900">My Properties</h1>
-        <p class="text-gray-500 text-sm mt-1">Manage your registered hotels, villas, and apartments.</p>
+        <p class="text-xs text-gray-500 mt-1">Manage your registered hotels, villas, and apartments.</p>
       </div>
-      <NuxtLink 
-        to="/Owner/add_hotels" 
-        class="px-4 py-2.5 bg-indigo-950 hover:bg-indigo-900 text-white rounded-xl text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
+      <button 
+        @click="showAddModal = true" 
+        class="px-4 py-2.5 text-sm font-medium bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition shadow-xs"
       >
-        <span>+ Add New Property</span>
-      </NuxtLink>
+        + Add New Property
+      </button>
     </div>
 
-    <!-- Properties Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div v-for="hotel in hotels" :key="hotel.id" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between">
+    <!-- Loading State -->
+    <div v-if="loading" class="text-center py-16 text-sm text-gray-500">
+      Loading properties from Firestore...
+    </div>
+
+    <!-- Hotel List Grid -->
+    <div v-else-if="hotels.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div 
+        v-for="hotel in hotels" 
+        :key="hotel.id" 
+        class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between"
+      >
         <div>
-          <!-- Property Image -->
-          <div class="h-48 w-full bg-gray-100 relative overflow-hidden">
+          <div class="h-44 bg-gray-200 relative">
             <img :src="hotel.image" :alt="hotel.name" class="w-full h-full object-cover" />
-            <span :class="statusBadge(hotel.status)" class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold shadow-sm">
-              {{ hotel.status }}
+            <span class="absolute top-3 right-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-xs font-bold text-gray-800">
+              ★ {{ hotel.rating || '5.0' }}
             </span>
           </div>
-
-          <!-- Property Info -->
           <div class="p-5">
-            <div class="text-xs text-indigo-950 font-semibold uppercase tracking-wider mb-1">{{ hotel.location }}</div>
-            <h3 class="font-serif font-bold text-lg text-gray-900 mb-2">{{ hotel.name }}</h3>
-            <div class="flex justify-between items-center text-sm text-gray-500 mt-4 pt-4 border-t border-gray-100">
-              <div>
-                <span class="text-gray-400 block text-xs">Nightly Rate</span>
-                <span class="font-bold text-gray-900 text-base">${{ hotel.price }}</span>
-              </div>
-              <div class="text-right">
-                <span class="text-gray-400 block text-xs">Active Bookings</span>
-                <span class="font-semibold text-gray-800">{{ hotel.bookings }} Stays</span>
-              </div>
-            </div>
+            <span class="text-[10px] font-bold text-indigo-950 uppercase tracking-wider block mb-1">{{ hotel.city }}</span>
+            <h2 class="text-lg font-bold text-gray-900 mb-2">{{ hotel.name }}</h2>
+            <p class="text-xs text-gray-500 line-clamp-2 mb-4">{{ hotel.description }}</p>
           </div>
         </div>
 
-        <!-- Card Actions -->
-        <div class="p-5 pt-0 flex gap-2">
-          <NuxtLink 
-            :to="`/Owner/hotel_details?id=${hotel.id}`" 
-            class="flex-1 py-2 text-center text-xs font-medium border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors"
-          >
-            View Details
-          </NuxtLink>
-          <NuxtLink 
-            :to="`/Owner/edit_hotel?id=${hotel.id}`" 
-            class="flex-1 py-2 text-center text-xs font-medium bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg transition-colors"
-          >
-            Edit Property
-          </NuxtLink>
+        <div class="p-5 pt-0 border-t border-gray-50 flex items-center justify-between mt-auto">
+          <div>
+            <span class="text-lg font-bold text-indigo-950">${{ hotel.pricePerNight }}</span>
+            <span class="text-xs text-gray-500"> / night</span>
+          </div>
+          <button @click="handleDelete(hotel.id)" class="text-xs font-semibold text-red-600 hover:underline">
+            Delete
+          </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div v-else class="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-xs">
+      <p class="text-gray-500 text-sm mb-4">No properties listed yet.</p>
+      <button @click="showAddModal = true" class="px-4 py-2 text-xs font-semibold bg-indigo-950 text-white rounded-xl">
+        Add Your First Hotel
+      </button>
+    </div>
+
+    <!-- INLINE MODAL CARD (Overlays on top of My Hotels page) -->
+    <div 
+      v-if="showAddModal" 
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all"
+    >
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-2xl max-w-xl w-full p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-4">
+          <div>
+            <h2 class="text-xl font-serif font-bold text-gray-900">Add New Property</h2>
+            <p class="text-xs text-gray-500">Fill out details below to publish directly to Firestore.</p>
+          </div>
+          <button @click="showAddModal = false" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+        </div>
+
+        <form @submit.prevent="handleCreateHotel" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Property Name</label>
+            <input 
+              v-model="form.name" 
+              type="text" 
+              placeholder="e.g., Sunset Horizon Villa" 
+              required 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+            />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">City / Location</label>
+              <input 
+                v-model="form.city" 
+                type="text" 
+                placeholder="e.g., Siem Reap" 
+                required 
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Price / Night ($)</label>
+              <input 
+                v-model="form.pricePerNight" 
+                type="number" 
+                placeholder="150" 
+                required 
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Description</label>
+            <textarea 
+              v-model="form.description" 
+              rows="3" 
+              placeholder="Brief description of property features..." 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950"
+            ></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cover Image URL</label>
+            <input 
+              v-model="form.image" 
+              type="url" 
+              placeholder="https://images.unsplash.com/..." 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+            />
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
+            <button 
+              type="button" 
+              @click="showAddModal = false" 
+              class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              :disabled="isSubmitting" 
+              class="px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition disabled:opacity-50"
+            >
+              {{ isSubmitting ? 'Saving...' : 'Save Property' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
-definePageMeta({
-  layout: 'owner'
+definePageMeta({ layout: 'owner' })
+
+const { getHotels, addHotel, deleteHotel } = useFirestoreDB()
+
+const hotels = ref([])
+const loading = ref(true)
+const showAddModal = ref(false)
+const isSubmitting = ref(false)
+
+const form = ref({
+  name: '',
+  city: '',
+  pricePerNight: '',
+  description: '',
+  image: ''
 })
 
-const hotels = ref([
-  { 
-    id: 1, 
-    name: 'Villa Azul', 
-    location: 'Ubud, Bali', 
-    price: 180, 
-    bookings: 12, 
-    status: 'Active', 
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80' 
-  },
-  { 
-    id: 2, 
-    name: 'The Glasshouse', 
-    location: 'Seminyak, Bali', 
-    price: 310, 
-    bookings: 8, 
-    status: 'Active', 
-    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80' 
-  },
-  { 
-    id: 3, 
-    name: 'Jungle Canopy Retreat', 
-    location: 'Ubud, Bali', 
-    price: 320, 
-    bookings: 0, 
-    status: 'Maintenance', 
-    image: 'https://afocirmbqdxnkyescnev.supabase.co/storage/v1/object/public/featured-images/8c7511bd-c8f5-424f-bed4-fa6348b35acf/c7a58e18-64d3-488d-b2b9-d00c07f30c10.webp' 
+const loadHotels = async () => {
+  loading.value = true
+  try {
+    hotels.value = await getHotels()
+  } catch (err) {
+    console.error('Failed to load hotels:', err)
+  } finally {
+    loading.value = false
   }
-])
-
-const statusBadge = (status) => {
-  if (status === 'Active') return 'bg-emerald-500 text-white'
-  return 'bg-amber-500 text-white'
 }
+
+const handleCreateHotel = async () => {
+  isSubmitting.value = true
+  try {
+    const defaultImage = form.value.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80'
+
+    await addHotel({
+      name: form.value.name,
+      city: form.value.city,
+      pricePerNight: Number(form.value.pricePerNight),
+      description: form.value.description,
+      image: defaultImage,
+      rating: 5.0,
+      reviewsCount: 0
+    })
+
+    // Reset form and close modal overlay
+    form.value = { name: '', city: '', pricePerNight: '', description: '', image: '' }
+    showAddModal.value = false
+    
+    // Refresh properties on screen immediately
+    await loadHotels()
+  } catch (err) {
+    alert('Failed to save property: ' + err.message)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const handleDelete = async (id) => {
+  if (confirm('Are you sure you want to delete this property?')) {
+    await deleteHotel(id)
+    await loadHotels()
+  }
+}
+
+onMounted(() => {
+  loadHotels()
+})
 </script>

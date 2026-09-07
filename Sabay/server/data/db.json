@@ -1,0 +1,20 @@
+{
+  "hotels": [
+    {
+      "id": 1,
+      "name": "Villa Azul Luxury Resort",
+      "city": "Cancun, Mexico",
+      "address": "Blvd. Kukulcan Km 16.5, Hotel Zone, Cancun",
+      "description": "Beachfront paradise featuring oceanfront suites, infinity pools, and private dining.",
+      "pricePerNight": 180,
+      "rating": 4.8,
+      "reviewsCount": 128,
+      "image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80",
+      "rooms": [
+        { "id": 101, "name": "Ocean Luxury Suite", "type": "Suite", "capacity": 2, "beds": "1 King Bed", "price": 250, "status": "Available" },
+        { "id": 102, "name": "Garden Villa Room", "type": "Villa", "capacity": 4, "beds": "2 Queen Beds", "price": 180, "status": "Available" }
+      ]
+    }
+  ],
+  "bookings": []
+}

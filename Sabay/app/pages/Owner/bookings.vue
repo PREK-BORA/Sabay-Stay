@@ -4,7 +4,7 @@
     <div class="flex justify-between items-center mb-6">
       <div>
         <h1 class="text-3xl font-serif font-bold text-gray-900">Bookings & Reservations</h1>
-        <p class="text-gray-500 text-sm mt-1">Manage guest reservations, view stay details, and process booking statuses.</p>
+        <p class="text-gray-500 text-sm mt-1">View guest reservations and stay details for your properties.</p>
       </div>
     </div>
 
@@ -40,7 +40,7 @@
       </select>
     </div>
 
-    <!-- Bookings Table -->
+    <!-- Read-Only Bookings Table -->
     <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <table class="w-full text-left border-collapse text-sm">
         <thead>
@@ -51,7 +51,7 @@
             <th class="py-3 px-4 font-medium">Check-In / Out</th>
             <th class="py-3 px-4 font-medium">Total Amount</th>
             <th class="py-3 px-4 font-medium">Status</th>
-            <th class="py-3 px-4 font-medium text-right">Actions</th>
+            <th class="py-3 px-4 font-medium text-right">View</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
@@ -75,19 +75,12 @@
                 {{ booking.status }}
               </span>
             </td>
-            <td class="py-4 px-4 text-right space-x-2">
-              <NuxtLink 
-                :to="`/Owner/booking_details?id=${booking.id}`" 
-                class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md font-medium"
-              >
-                Details
-              </NuxtLink>
+            <td class="py-4 px-4 text-right">
               <button 
-                v-if="booking.status === 'Pending'" 
-                @click="updateStatus(booking.id, 'Confirmed')" 
-                class="px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white rounded-md font-medium"
+                @click="selectedBooking = booking" 
+                class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md font-medium transition-colors"
               >
-                Confirm
+                View Details
               </button>
             </td>
           </tr>
@@ -96,6 +89,73 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- READ-ONLY DETAILS MODAL -->
+    <div 
+      v-if="selectedBooking" 
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all"
+    >
+      <div class="bg-white rounded-2xl border border-gray-100 shadow-2xl max-w-md w-full p-6 space-y-4">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+          <div>
+            <span class="text-xs font-mono text-gray-400 font-bold uppercase">Booking Overview</span>
+            <h3 class="text-lg font-serif font-bold text-gray-900">#{{ selectedBooking.id }}</h3>
+          </div>
+          <button @click="selectedBooking = null" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+        </div>
+
+        <div class="space-y-3 text-sm">
+          <div class="p-3 bg-gray-50 rounded-xl flex justify-between items-center">
+            <span class="text-xs text-gray-500 font-semibold uppercase">Status</span>
+            <span :class="statusBadge(selectedBooking.status)" class="px-2.5 py-1 text-xs rounded-full font-medium">
+              {{ selectedBooking.status }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs border-b border-gray-100 pb-3">
+            <div>
+              <p class="text-gray-400">Guest Name</p>
+              <p class="font-bold text-gray-800 mt-0.5">{{ selectedBooking.guest }}</p>
+            </div>
+            <div>
+              <p class="text-gray-400">Email Address</p>
+              <p class="font-bold text-gray-800 mt-0.5">{{ selectedBooking.email }}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs border-b border-gray-100 pb-3">
+            <div>
+              <p class="text-gray-400">Property</p>
+              <p class="font-bold text-gray-800 mt-0.5">{{ selectedBooking.property }}</p>
+            </div>
+            <div>
+              <p class="text-gray-400">Room Selected</p>
+              <p class="font-bold text-gray-800 mt-0.5">{{ selectedBooking.roomType }}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-xs border-b border-gray-100 pb-3">
+            <div>
+              <p class="text-gray-400">Dates</p>
+              <p class="font-bold text-gray-800 mt-0.5">{{ selectedBooking.checkIn }} - {{ selectedBooking.checkOut }}</p>
+            </div>
+            <div>
+              <p class="text-gray-400">Total Price</p>
+              <p class="font-bold text-indigo-950 text-sm mt-0.5">${{ selectedBooking.totalPrice }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end">
+          <button 
+            @click="selectedBooking = null" 
+            class="px-4 py-2 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -111,6 +171,7 @@ const activeTab = ref('All')
 const tabs = ['All', 'Confirmed', 'Pending', 'Completed', 'Cancelled']
 const searchQuery = ref('')
 const selectedProperty = ref('')
+const selectedBooking = ref(null)
 
 const bookings = ref([
   { id: 'BK-9021', guest: 'Sarah Jenkins', email: 'sarah.j@example.com', property: 'Villa Azul', roomType: 'Ocean Luxury Suite', checkIn: 'Oct 12, 2026', checkOut: 'Oct 18, 2026', nights: 6, totalPrice: '1,250', status: 'Confirmed' },
@@ -129,11 +190,6 @@ const filteredBookings = computed(() => {
     return matchesTab && matchesSearch && matchesProp
   })
 })
-
-const updateStatus = (id, newStatus) => {
-  const target = bookings.value.find(b => b.id === id)
-  if (target) target.status = newStatus
-}
 
 const statusBadge = (status) => {
   if (status === 'Confirmed') return 'bg-emerald-100 text-emerald-700'

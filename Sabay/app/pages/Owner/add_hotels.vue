@@ -1,91 +1,80 @@
 <template>
-  <div class="p-6 bg-gray-50 min-h-screen max-w-4xl mx-auto">
-    <!-- Navigation Back -->
-    <div class="mb-6">
-      <NuxtLink to="/Owner/my_hotels" class="text-sm font-semibold text-gray-600 hover:text-gray-900 flex items-center gap-1">
-        ← Back to Properties
-      </NuxtLink>
-    </div>
+  <div class="p-8 max-w-4xl mx-auto">
+    <NuxtLink to="/Owner/my_hotels" class="text-sm text-gray-500 hover:text-gray-800 mb-6 inline-block">
+      ← Back to Properties
+    </NuxtLink>
 
-    <!-- Form Container -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-      <h1 class="text-2xl font-serif font-bold text-gray-900 mb-2">Add New Property</h1>
-      <p class="text-gray-500 text-sm mb-6">Fill in the details below to list your property on SabayStay.</p>
+    <div class="bg-white rounded-2xl p-8 border border-gray-100 shadow-sm space-y-6">
+      <div>
+        <h1 class="text-2xl font-serif font-bold text-gray-900">Add New Property</h1>
+        <p class="text-xs text-gray-500 mt-1">Fill in the details below to list your property on SabayStay.</p>
+      </div>
 
-      <form @submit.prevent="submitProperty" class="space-y-6">
-        <!-- Property Name -->
+      <form @submit.prevent="handleSubmit" class="space-y-5">
         <div>
-          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Property Name</label>
+          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Property Name</label>
           <input 
             v-model="form.name" 
             type="text" 
-            required
             placeholder="e.g., Sunset Horizon Villa" 
-            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-indigo-950 transition-colors" 
+            required 
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-950" 
           />
         </div>
 
-        <!-- Location & Price Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Location / City</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Location / City</label>
             <input 
-              v-model="form.location" 
+              v-model="form.city" 
               type="text" 
-              required
               placeholder="e.g., Siem Reap, Cambodia" 
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-indigo-950 transition-colors" 
+              required 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-950" 
             />
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Base Price Per Night ($)</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Base Price Per Night ($)</label>
             <input 
-              v-model="form.price" 
+              v-model="form.pricePerNight" 
               type="number" 
-              required
               placeholder="150" 
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-indigo-950 transition-colors" 
+              required 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-950" 
             />
           </div>
         </div>
 
-        <!-- Description -->
         <div>
-          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Description</label>
+          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Description</label>
           <textarea 
             v-model="form.description" 
             rows="4" 
-            required
             placeholder="Describe your property, unique features, surroundings..." 
-            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-indigo-950 transition-colors"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-950"
           ></textarea>
         </div>
 
-        <!-- Image URL -->
         <div>
-          <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Cover Image URL</label>
+          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cover Image URL</label>
           <input 
             v-model="form.image" 
             type="url" 
-            required
             placeholder="https://images.unsplash.com/..." 
-            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-800 outline-none focus:border-indigo-950 transition-colors" 
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-indigo-950" 
           />
         </div>
 
-        <!-- Submit Buttons -->
-        <div class="flex justify-end gap-4 pt-4 border-t border-gray-100">
-          <NuxtLink 
-            to="/Owner/my_hotels" 
-            class="px-6 py-3 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-xl text-sm font-medium transition-colors"
-          >
+        <div class="flex justify-end gap-3 pt-4">
+          <NuxtLink to="/Owner/my_hotels" class="px-5 py-2.5 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
             Cancel
           </NuxtLink>
           <button 
             type="submit" 
-            class="px-6 py-3 bg-indigo-950 hover:bg-indigo-900 text-white rounded-xl text-sm font-medium shadow-sm transition-colors"
+            :disabled="isSubmitting" 
+            class="px-6 py-2.5 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition disabled:opacity-50"
           >
-            Save Property
+            {{ isSubmitting ? 'Saving...' : 'Save Property' }}
           </button>
         </div>
       </form>
@@ -94,26 +83,44 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-definePageMeta({
-  layout: 'owner'
-})
+definePageMeta({ layout: 'owner' })
 
 const router = useRouter()
+const { addHotel } = useFirestoreDB()
 
-const form = reactive({
+const isSubmitting = ref(false)
+const form = ref({
   name: '',
-  location: '',
-  price: '',
+  city: '',
+  pricePerNight: '',
   description: '',
   image: ''
 })
 
-const submitProperty = () => {
-  // In a live app, you'd save this to your database/Firebase here.
-  alert(`Property "${form.name}" successfully created!`)
-  router.push('/Owner/my_hotels')
+const handleSubmit = async () => {
+  isSubmitting.value = true
+  try {
+    const defaultImage = form.value.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80'
+    
+    await addHotel({
+      name: form.value.name,
+      city: form.value.city,
+      pricePerNight: Number(form.value.pricePerNight),
+      description: form.value.description,
+      image: defaultImage,
+      rating: 5.0,
+      reviewsCount: 0
+    })
+
+    router.push('/Owner/my_hotels')
+  } catch (err) {
+    console.error('Error saving hotel:', err)
+    alert('Failed to save property. Please try again.')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>

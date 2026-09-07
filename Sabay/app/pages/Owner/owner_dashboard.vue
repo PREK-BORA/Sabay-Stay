@@ -6,9 +6,7 @@
         <h1 class="text-3xl font-serif font-bold text-gray-900">Good Morning, Eleanor</h1>
         <p class="text-gray-500 text-sm mt-1">Here is the overview of your properties today.</p>
       </div>
-      <NuxtLink to="/owner/add_hotels" class="bg-indigo-950 text-white px-5 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 hover:bg-indigo-900">
-        <span>+</span> Add New Property
-      </NuxtLink>
+     
     </div>
 
     <!-- Stat Cards -->
