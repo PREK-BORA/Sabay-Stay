@@ -4,14 +4,14 @@
     <div class="flex justify-between items-center mb-6">
       <div>
         <div class="flex items-center gap-2 mb-1">
-          <NuxtLink to="/Owner/my_hotels" class="text-xs text-gray-500 hover:text-gray-900">My Properties</NuxtLink>
+          <NuxtLink to="/owner/my_hotels" class="text-xs text-gray-500 hover:text-gray-900">My Properties</NuxtLink>
           <span class="text-xs text-gray-400">/</span>
-          <span class="text-xs text-indigo-950 font-semibold">Villa Azul</span>
+          <span class="text-xs text-indigo-950 font-semibold">Rooms</span>
         </div>
         <h1 class="text-3xl font-serif font-bold text-gray-900">Room Management</h1>
       </div>
       <button 
-        @click="showAddRoomModal = true" 
+        @click="openModal()" 
         class="px-4 py-2.5 bg-indigo-950 hover:bg-indigo-900 text-white rounded-xl text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
       >
         + Add New Room
@@ -50,6 +50,12 @@
             </td>
             <td class="py-4 px-6 text-right space-x-2">
               <button 
+                @click="openModal(room)" 
+                class="px-3 py-1.5 text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-md font-medium transition-colors"
+              >
+                Edit
+              </button>
+              <button 
                 @click="handleDeleteRoom(room.id)" 
                 class="px-3 py-1.5 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-medium transition-colors"
               >
@@ -64,22 +70,24 @@
       </div>
     </div>
 
-    <!-- INLINE ADD ROOM MODAL (Overlays on top of the Room page) -->
+    <!-- INLINE ADD / EDIT ROOM MODAL -->
     <div 
       v-if="showAddRoomModal" 
       class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all"
     >
       <div class="bg-white rounded-2xl border border-gray-100 shadow-2xl max-w-lg w-full p-6 space-y-4">
         <div class="flex justify-between items-center border-b border-gray-100 pb-3">
-          <h3 class="text-lg font-serif font-bold text-gray-900">Add New Room</h3>
-          <button @click="showAddRoomModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
+          <h3 class="text-lg font-serif font-bold text-gray-900">
+            {{ editingId ? 'Edit Room' : 'Add New Room' }}
+          </h3>
+          <button @click="closeModal" class="text-gray-400 hover:text-gray-600">✕</button>
         </div>
 
-        <form @submit.prevent="handleCreateRoom" class="space-y-3">
+        <form @submit.prevent="handleSubmitRoom" class="space-y-3">
           <div>
             <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Room Name and Room number</label>
             <input 
-              v-model="newRoom.name" 
+              v-model="roomForm.name" 
               type="text" 
               placeholder="e.g. Ocean Luxury Suite Room-101" 
               required 
@@ -91,7 +99,7 @@
             <div>
               <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Room Type</label>
               <input 
-                v-model="newRoom.type" 
+                v-model="roomForm.type" 
                 type="text" 
                 placeholder="Suite, Villa, Deluxe" 
                 required 
@@ -101,7 +109,7 @@
             <div>
               <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Capacity (Guests)</label>
               <input 
-                v-model="newRoom.capacity" 
+                v-model="roomForm.capacity" 
                 type="number" 
                 placeholder="2" 
                 required 
@@ -114,7 +122,7 @@
             <div>
               <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Beds</label>
               <input 
-                v-model="newRoom.beds" 
+                v-model="roomForm.beds" 
                 type="text" 
                 placeholder="1 King Bed" 
                 required 
@@ -124,7 +132,7 @@
             <div>
               <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Price / Night ($)</label>
               <input 
-                v-model="newRoom.price" 
+                v-model="roomForm.price" 
                 type="number" 
                 placeholder="200" 
                 required 
@@ -133,10 +141,21 @@
             </div>
           </div>
 
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Status</label>
+            <select 
+              v-model="roomForm.status" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-950"
+            >
+              <option value="Available">Available</option>
+              <option value="Booked">Booked</option>
+            </select>
+          </div>
+
           <div class="flex justify-end gap-2 pt-3 border-t border-gray-100">
             <button 
               type="button" 
-              @click="showAddRoomModal = false" 
+              @click="closeModal" 
               class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200"
             >
               Cancel
@@ -146,7 +165,7 @@
               :disabled="isSubmitting" 
               class="px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 disabled:opacity-50"
             >
-              {{ isSubmitting ? 'Saving...' : 'Save Room' }}
+              {{ isSubmitting ? 'Saving...' : (editingId ? 'Update Room' : 'Save Room') }}
             </button>
           </div>
         </form>
@@ -162,25 +181,47 @@ definePageMeta({
   layout: 'owner'
 })
 
-const { getRoomsByHotel, addRoom, deleteRoom } = useFirestoreDB()
+const route = useRoute()
+const { getRoomsByHotel, addRoom, updateRoom, deleteRoom } = useFirestoreDB()
 
-// Change this to match your actual selected hotel's ID or dynamic query route
-const currentHotelId = 'default_hotel_id' 
+// 1. Dynamic Hotel ID from query parameter (/owner/rooms?hotelId=...)
+const currentHotelId = route.query.hotelId || 'default_hotel_id' 
 
 const rooms = ref([])
 const loading = ref(true)
 const showAddRoomModal = ref(false)
 const isSubmitting = ref(false)
+const editingId = ref(null)
 
-const newRoom = ref({
+const initialForm = {
   name: '',
   type: 'Suite',
   capacity: 2,
   beds: '1 King Bed',
   price: '',
   status: 'Available'
-})
+}
 
+const roomForm = ref({ ...initialForm })
+
+const openModal = (roomToEdit = null) => {
+  if (roomToEdit) {
+    editingId.value = roomToEdit.id
+    roomForm.value = { ...roomToEdit }
+  } else {
+    editingId.value = null
+    roomForm.value = { ...initialForm }
+  }
+  showAddRoomModal.value = true
+}
+
+const closeModal = () => {
+  showAddRoomModal.value = false
+  editingId.value = null
+  roomForm.value = { ...initialForm }
+}
+
+// READ
 const loadRooms = async () => {
   loading.value = true
   try {
@@ -192,20 +233,38 @@ const loadRooms = async () => {
   }
 }
 
-const handleCreateRoom = async () => {
+// CREATE & UPDATE (Optimistic local updates to fix slowness)
+const handleSubmitRoom = async () => {
+  if (isSubmitting.value) return
   isSubmitting.value = true
+
+  const payload = {
+    ...roomForm.value,
+    price: Number(roomForm.value.price) || 0,
+    capacity: Number(roomForm.value.capacity) || 1,
+    hotelId: currentHotelId
+  }
+
   try {
-    await addRoom(currentHotelId, {
-      ...newRoom.value,
-      price: Number(newRoom.price)
-    })
-    
-    // Reset form & hide modal
-    newRoom.value = { name: '', type: 'Suite', capacity: 2, beds: '1 King Bed', price: '', status: 'Available' }
-    showAddRoomModal.value = false
-    
-    // Refresh table immediately
-    await loadRooms()
+    if (editingId.value) {
+      // UPDATE
+      if (updateRoom) {
+        await updateRoom(editingId.value, payload)
+      }
+      const index = rooms.value.findIndex(r => r.id === editingId.value)
+      if (index !== -1) {
+        rooms.value[index] = { ...rooms.value[index], ...payload }
+      }
+    } else {
+      // CREATE
+      const docRef = await addRoom(currentHotelId, payload)
+      rooms.value.unshift({
+        id: docRef?.id || Date.now().toString(),
+        ...payload
+      })
+    }
+
+    closeModal()
   } catch (err) {
     alert('Failed to save room: ' + err.message)
   } finally {
@@ -213,10 +272,16 @@ const handleCreateRoom = async () => {
   }
 }
 
+// DELETE
 const handleDeleteRoom = async (id) => {
   if (confirm('Are you sure you want to delete this room?')) {
-    await deleteRoom(id)
-    await loadRooms()
+    try {
+      await deleteRoom(id)
+      // Instant remove from list without waiting for a re-fetch network delay
+      rooms.value = rooms.value.filter(r => r.id !== id)
+    } catch (err) {
+      alert('Error deleting room: ' + err.message)
+    }
   }
 }
 

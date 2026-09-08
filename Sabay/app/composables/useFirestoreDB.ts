@@ -2,6 +2,7 @@ import {
   collection, 
   getDocs, 
   addDoc, 
+  updateDoc,
   deleteDoc, 
   doc, 
   query, 
@@ -22,14 +23,19 @@ export const useFirestoreDB = () => {
       ...hotelData,
       createdAt: new Date().toISOString()
     })
-    return docRef.id
+    return docRef
+  }
+
+  const updateHotel = async (hotelId: string, hotelData: any) => {
+    const hotelRef = doc($db, 'hotels', hotelId)
+    await updateDoc(hotelRef, hotelData)
   }
 
   const deleteHotel = async (hotelId: string) => {
     await deleteDoc(doc($db, 'hotels', hotelId))
   }
 
-  // 2. ROOM COLLECTION (Singular 'room')
+  // 2. ROOM COLLECTION (Collection: 'room')
   const getRoomsByHotel = async (hotelId: string) => {
     const q = query(collection($db, 'room'), where('hotelId', '==', hotelId))
     const querySnapshot = await getDocs(q)
@@ -42,7 +48,12 @@ export const useFirestoreDB = () => {
       ...roomData,
       createdAt: new Date().toISOString()
     })
-    return docRef.id
+    return docRef
+  }
+
+  const updateRoom = async (roomId: string, roomData: any) => {
+    const roomRef = doc($db, 'room', roomId)
+    await updateDoc(roomRef, roomData)
   }
 
   const deleteRoom = async (roomId: string) => {
@@ -56,7 +67,7 @@ export const useFirestoreDB = () => {
       status: 'confirmed',
       createdAt: new Date().toISOString()
     })
-    return docRef.id
+    return docRef
   }
 
   const getBookingsByGuest = async (email: string) => {
@@ -78,15 +89,17 @@ export const useFirestoreDB = () => {
       ...reviewData,
       createdAt: new Date().toISOString()
     })
-    return docRef.id
+    return docRef
   }
 
   return {
     getHotels,
     addHotel,
+    updateHotel,
     deleteHotel,
     getRoomsByHotel,
     addRoom,
+    updateRoom,
     deleteRoom,
     createBooking,
     getBookingsByGuest,
