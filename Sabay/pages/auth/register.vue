@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import { ref } from "vue";
-
+import { useRouter } from "vue-router";
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
+const fullName = ref("");
+const email = ref("");
+const password = ref("");
+const confirmPassword = ref("");
+const acceptedTerms = ref(false);
+const errorMessage = ref("");
+const router = useRouter();
 
 const togglePassword = () => {
   showPassword.value = !showPassword.value;
@@ -11,6 +18,36 @@ const togglePassword = () => {
 const toggleConfirmPassword = () => {
   showConfirmPassword.value = !showConfirmPassword.value;
 };
+
+function register() {
+  if (!fullName.value.trim() || !email.value.trim() || !password.value) {
+    errorMessage.value = "Please complete all required fields.";
+    return;
+  }
+  if (password.value.length < 6) {
+    errorMessage.value = "Password must be at least 6 characters.";
+    return;
+  }
+  if (password.value !== confirmPassword.value) {
+    errorMessage.value = "Passwords do not match.";
+    return;
+  }
+  if (!acceptedTerms.value) {
+    errorMessage.value = "Please agree to the terms and conditions.";
+    return;
+  }
+
+  localStorage.setItem(
+    "sabaystay-user",
+    JSON.stringify({
+      name: fullName.value.trim(),
+      email: email.value.trim(),
+      password: password.value,
+    }),
+  );
+  localStorage.setItem("sabaystay-authenticated", "true");
+  router.push("/dashboard/profile");
+}
 </script>
 
 <template>
@@ -20,7 +57,7 @@ const toggleConfirmPassword = () => {
       aria-label="SabayStay travel inspiration"
     >
       <img
-        src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1200&q=85"
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSWAqnMVrkvTz9PAEcP4vJBXgdXPlf75vtstEPlqWTzuA&s=10"
         alt="Luxury resort surrounded by tropical mountains"
         class="absolute inset-0 h-full w-full object-cover"
       />
@@ -64,12 +101,13 @@ const toggleConfirmPassword = () => {
           </p>
         </div>
 
-        <form class="space-y-4" @submit.prevent>
+        <form class="space-y-4" @submit.prevent="register">
           <label class="block text-xs font-medium text-[#17191e]">
             Full Name
             <input
               type="text"
-              placeholder="John Doe"
+              v-model="fullName"
+              placeholder="Prek Bora"
               autocomplete="name"
               class="mt-1.5 block h-12 w-full rounded-md border border-[#c9cad4] px-4 text-sm text-[#252936] outline-none placeholder:text-[#9da0aa] focus:border-[#080d70] focus:ring-1 focus:ring-[#080d70]"
             />
@@ -79,7 +117,8 @@ const toggleConfirmPassword = () => {
             Email Address
             <input
               type="email"
-              placeholder="john@example.com"
+              v-model="email"
+              placeholder="bora@example.com"
               autocomplete="email"
               class="mt-1.5 block h-12 w-full rounded-md border border-[#c9cad4] px-4 text-sm text-[#252936] outline-none placeholder:text-[#9da0aa] focus:border-[#080d70] focus:ring-1 focus:ring-[#080d70]"
             />
@@ -89,6 +128,7 @@ const toggleConfirmPassword = () => {
             Password
             <input
               :type="showPassword ? 'text' : 'password'"
+              v-model="password"
               placeholder="••••••••"
               autocomplete="new-password"
               class="mt-1.5 block h-12 w-full rounded-md border border-[#c9cad4] px-4 pr-12 text-sm text-[#252936] outline-none placeholder:text-[#777b89] focus:border-[#080d70] focus:ring-1 focus:ring-[#080d70]"
@@ -107,6 +147,7 @@ const toggleConfirmPassword = () => {
             Confirm Password
             <input
               :type="showConfirmPassword ? 'text' : 'password'"
+              v-model="confirmPassword"
               placeholder="••••••••"
               autocomplete="new-password"
               class="mt-1.5 block h-12 w-full rounded-md border border-[#c9cad4] px-4 text-sm text-[#252936] outline-none placeholder:text-[#777b89] focus:border-[#080d70] focus:ring-1 focus:ring-[#080d70]"
@@ -118,6 +159,7 @@ const toggleConfirmPassword = () => {
           >
             <input
               type="checkbox"
+              v-model="acceptedTerms"
               class="h-4 w-4 rounded border-[#c9cad4] accent-[#080d70]"
             />
             <span
@@ -131,6 +173,10 @@ const toggleConfirmPassword = () => {
               ></span
             >
           </label>
+
+          <p v-if="errorMessage" class="text-sm text-red-600" role="alert">
+            {{ errorMessage }}
+          </p>
 
           <button
             type="submit"

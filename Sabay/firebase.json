@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "sabay-stay"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

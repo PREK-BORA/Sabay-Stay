@@ -1,296 +1,295 @@
 <script setup lang="ts">
-const destinations = [
+import { computed, ref } from "vue";
+
+type Destination = {
+  slug: string;
+  country: string;
+  name: string;
+  description: string;
+  image: string;
+  region: string;
+  season: string;
+  metric: string;
+};
+
+const destinations: Destination[] = [
   {
-    country: "Italy",
-    name: "Amalfi Coast",
+    slug: "khos rong",
+    country: "Cambodia",
+    name: "Khos Rong",
     description:
       "Dramatic cliffs, pastel villages, and the sparkling Mediterranean.",
     image:
-      "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=80",
-    featured: true,
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfn2DaMzZdw2EOSNDIxV5DJkk6ky6i3VX42qaO89PsiA&s=10",
+    region: "Coastal",
+    season: "Summer",
     metric: "24k travelers this year",
-    accent: "#d7ebff",
   },
   {
-    country: "Japan",
-    name: "Kyoto",
-    description: "Temples, gardens, and timeless traditions.",
+    slug: "Angkor Wat",
+    country: "Cambodia",
+    name: "Angkor Wat",
+    description: "Ancient temple complex and cultural heritage.",
     image:
-      "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80",
-    metric: "98%",
-    accent: "#f7efe1",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0g-_gfwa3HmXM_n-HlMgDdEoyhlLw9kj1qWb2RG3x1g&s=10",
+    region: "Cultural",
+    season: "Spring",
+    metric: "98% guest love",
   },
   {
-    country: "South Asia",
-    name: "The Maldives",
-    description: "Ultimate overwater luxury and isolation.",
+    slug: "Khos Sdach",
+    country: "Cambodia",
+    name: "khos Sdach",
+    description: "Ultimate overwater luxury and quiet island days.",
     image:
-      "https://images.unsplash.com/photo-1573843981267-be1999ff37cd?auto=format&fit=crop&w=1200&q=80",
-    metric: "4.9",
-    accent: "#cfeaf1",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnEu51DLvPSb_YK6TanBNh2MTOWmqowBc0vhUwVgxfXA&s=10",
+    region: "coastal",
+    season: "Winter",
+    metric: "4.9 guest rating",
   },
   {
-    country: "Central America",
-    name: "Costa Rica",
+    slug: "khos Songsa",
+    country: "Cambodia",
+    name: "khos Songsa",
     description: "Eco-luxury amid vibrant biodiversity.",
     image:
-      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80",
-    metric: "",
-    accent: "#d7ebe8",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSValg7gR1_INGa4FS6OZT3Mxpyuf4mE7TA9LmSDU0Mng&s=10",
+    region: "coastal",
+    season: "Winter",
+    metric: "Wild by nature",
   },
   {
-    country: "Switzerland",
-    name: "Swiss Alps",
+    slug: "Chiso Mountain",
+    country: "Cambodia",
+    name: "Chiso Mountain",
     description: "Pristine slopes and exclusive alpine retreats.",
     image:
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80",
-    metric: "",
-    accent: "#dfeaf6",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVSEUpnDttq4dCn9WvwRlERdoHe4r5siVyDTKoF8amEg&s=10",
+    region: "Mountains",
+    season: "Winter",
+    metric: "Peak season",
   },
 ];
 
-const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
+const regions = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
+const searchQuery = ref("");
+const selectedRegion = ref("All Regions");
+const selectedSeason = ref("Any Season");
+
+const filteredDestinations = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase();
+  return destinations.filter((destination) => {
+    const matchesRegion =
+      selectedRegion.value === "All Regions" ||
+      destination.region === selectedRegion.value;
+    const matchesSeason =
+      selectedSeason.value === "Any Season" ||
+      destination.season === selectedSeason.value;
+    const matchesQuery =
+      !query ||
+      `${destination.name} ${destination.country} ${destination.description}`
+        .toLowerCase()
+        .includes(query);
+    return matchesRegion && matchesSeason && matchesQuery;
+  });
+});
 </script>
 
 <template>
-  <div class="mx-auto max-w-[1280px] px-5 pb-16 pt-8 md:px-8">
-    <section class="text-center">
-      <h1
-        class="sabay-display text-5xl font-black tracking-[-0.06em] text-[#1d2f52] md:text-[5.5rem]"
-      >
-        Discover the Extraordinary
-      </h1>
-      <p class="mx-auto mt-5 max-w-3xl text-xl leading-8 text-[#46576f]">
-        Curated collections of the world's most breathtaking regions, designed
-        for the discerning traveler.
-      </p>
-
+  <div class="min-h-screen bg-[#f7f6f2] text-[#1d2f52]">
+    <section class="relative overflow-hidden bg-[#0d224a] text-white">
       <div
-        class="mx-auto mt-8 flex max-w-4xl flex-col gap-3 rounded-[1.5rem] bg-white p-3 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center"
-      >
-        <div
-          class="flex flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-[#f9fafb] px-4 py-3 text-left"
-        >
-          <span class="text-xl">⌕</span>
-          <span class="text-[#495d7d]">Search regions, cities, or islands</span>
-        </div>
-
-        <div
-          class="flex items-center gap-3 rounded-xl border border-slate-200 bg-[#f9fafb] px-4 py-3 text-left md:w-[220px]"
-        >
-          <span class="text-xl">▣</span>
-          <span class="text-[#495d7d]">Any Season</span>
-        </div>
-
-        <button
-          class="rounded-xl bg-[#0d224a] px-6 py-3 text-base font-semibold text-white hover:bg-[#0b1d3d]"
-        >
-          Explore
-        </button>
-      </div>
-
-      <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <button
-          v-for="filter in filters"
-          :key="filter"
-          class="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-[#1d2f52] hover:border-[#1d2f52]"
-          :class="
-            filter === 'All Regions'
-              ? 'bg-[#0d224a] text-white hover:bg-[#0b1d3d]'
-              : ''
-          "
-        >
-          {{ filter }}
-        </button>
-      </div>
-    </section>
-
-    <section class="mt-10 grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+        class="absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(215,235,255,0.2),transparent_32%)]"
+        aria-hidden="true"
+      />
       <div
-        class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
+        class="relative mx-auto max-w-7xl px-5 pb-20 pt-16 md:px-10 md:pb-28 md:pt-24"
       >
-        <div class="relative h-[360px] overflow-hidden md:h-[440px]">
-          <img
-            class="h-full w-full object-cover"
-            src="https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=80"
-            alt="Amalfi Coast"
-          />
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-[#0d1d30]/80 via-[#081826]/20 to-transparent"
-          />
-
-          <div class="absolute inset-x-0 bottom-0 p-6 text-white">
-            <div class="flex items-center justify-between gap-3">
-              <div>
-                <p class="text-sm uppercase tracking-[0.22em] text-white/85">
-                  Italy
-                </p>
-                <h2 class="sabay-display mt-2 text-5xl font-black">
-                  Amalfi Coast
-                </h2>
-              </div>
-              <div
-                class="rounded-full bg-white/15 px-4 py-2 text-sm backdrop-blur-sm"
-              >
-                24k travelers this year
-              </div>
-            </div>
-            <div class="mt-5 flex items-center justify-between gap-4">
-              <p class="max-w-md text-lg text-white/85">
-                Dramatic cliffs, pastel villages, and the sparkling
-                Mediterranean.
-              </p>
-              <button
-                class="rounded-full border border-white/75 bg-white/10 px-5 py-3 text-sm font-medium text-white hover:bg-white/20"
-              >
-                Explore →
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="space-y-5">
-        <div
-          class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
-        >
-          <div class="relative h-[220px] overflow-hidden">
-            <img
-              :src="destinations[1].image"
-              class="h-full w-full object-cover"
-              alt="Kyoto"
-            />
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-[#0f1d29]/70 to-transparent"
-            />
-            <div class="absolute inset-x-0 bottom-0 p-5 text-white">
-              <div class="flex items-center justify-between gap-3">
-                <p class="text-sm uppercase tracking-[0.18em] text-white/80">
-                  Japan
-                </p>
-                <span
-                  class="rounded-full bg-white/15 px-2 py-1 text-xs text-white/90"
-                  >98%</span
-                >
-              </div>
-              <h3 class="sabay-display mt-2 text-4xl font-black">Kyoto</h3>
-              <p class="mt-2 text-sm text-white/80">
-                Temples, gardens, and timeless traditions.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
-        >
-          <div class="relative h-[220px] overflow-hidden">
-            <img
-              :src="destinations[2].image"
-              class="h-full w-full object-cover"
-              alt="The Maldives"
-            />
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-[#0a2035]/70 to-transparent"
-            />
-            <div class="absolute inset-x-0 bottom-0 p-5 text-white">
-              <div class="flex items-center justify-between gap-3">
-                <p class="text-sm uppercase tracking-[0.18em] text-white/80">
-                  South Asia
-                </p>
-                <span
-                  class="rounded-full bg-white/15 px-2 py-1 text-xs text-white/90"
-                  >★ 4.9</span
-                >
-              </div>
-              <h3 class="sabay-display mt-2 text-4xl font-black">
-                The Maldives
-              </h3>
-              <p class="mt-2 text-sm text-white/80">
-                Ultimate overwater luxury and isolation.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="mt-6 grid gap-5 xl:grid-cols-[0.95fr_1.05fr_0.75fr]">
-      <div
-        class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
-      >
-        <div class="relative h-[260px] overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80"
-            class="h-full w-full object-cover"
-            alt="Swiss Alps"
-          />
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-[#091827]/80 via-[#0a1e2b]/25 to-transparent"
-          />
-          <div class="absolute inset-x-0 bottom-0 p-5 text-white">
-            <p class="text-sm uppercase tracking-[0.18em] text-white/80">
-              Switzerland
-            </p>
-            <h3 class="sabay-display mt-2 text-4xl font-black">Swiss Alps</h3>
-            <p class="mt-2 text-sm text-white/80">
-              Pristine slopes and exclusive alpine retreats.
-            </p>
-            <button
-              class="mt-4 rounded-xl border border-white/70 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20"
-            >
-              Discover More
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
-      >
-        <div class="relative h-[260px] overflow-hidden">
-          <img
-            src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"
-            class="h-full w-full object-cover"
-            alt="Costa Rica"
-          />
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-[#0a1d28]/80 to-transparent"
-          />
-          <div class="absolute inset-x-0 bottom-0 p-5 text-white">
-            <p class="text-sm uppercase tracking-[0.18em] text-white/80">
-              Central America
-            </p>
-            <h3 class="sabay-display mt-2 text-4xl font-black">Costa Rica</h3>
-            <p class="mt-2 text-sm text-white/80">
-              Eco-luxury amid vibrant biodiversity.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="flex items-center justify-center rounded-[2rem] border border-slate-200 bg-[#f7f5f1] p-6 shadow-sm"
-      >
-        <div class="text-center">
-          <div
-            class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white text-2xl text-[#1d2f52] shadow-sm"
+        <div class="max-w-3xl">
+          <p
+            class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-200"
           >
-            ✦
-          </div>
-          <h3 class="sabay-display mt-5 text-4xl font-black text-[#1d2f52]">
-            Can't decide?
-          </h3>
-          <p class="mt-4 text-lg leading-8 text-[#455670]">
-            Let our concierge craft a bespoke journey for you.
+            Your world, beautifully considered
           </p>
-          <button
-            class="mt-5 rounded-xl bg-[#0d224a] px-5 py-3 text-sm font-semibold text-white hover:bg-[#0a1d3d]"
+          <h1
+            class="sabay-display mt-5 text-5xl font-black leading-[0.98] tracking-[-0.05em] md:text-8xl"
           >
-            Contact Concierge
+            Discover the extraordinary.
+          </h1>
+          <p
+            class="mt-6 max-w-2xl text-base leading-7 text-white/75 md:text-xl"
+          >
+            Curated destinations, remarkable stays, and the kind of places that
+            make you want to stay a little longer.
+          </p>
+        </div>
+        <div
+          class="mt-10 grid max-w-5xl gap-3 rounded-2xl bg-white p-3 text-[#1d2f52] shadow-2xl md:grid-cols-[1.4fr_0.8fr_auto]"
+        >
+          <label
+            class="flex items-center gap-3 rounded-xl border border-slate-200 bg-[#f9fafb] px-4 py-3"
+          >
+            <span class="text-xl text-[#087d72]" aria-hidden="true">⌕</span>
+            <span class="sr-only">Search destinations</span>
+            <input
+              v-model="searchQuery"
+              type="search"
+              placeholder="Search regions, cities, or islands"
+              class="w-full bg-transparent text-sm outline-none placeholder:text-[#718096]"
+            />
+          </label>
+          <label
+            class="flex items-center gap-3 rounded-xl border border-slate-200 bg-[#f9fafb] px-4 py-3"
+          >
+            <span class="text-lg text-[#087d72]" aria-hidden="true">◷</span>
+            <span class="sr-only">Choose a season</span>
+            <select
+              v-model="selectedSeason"
+              class="w-full bg-transparent text-sm outline-none"
+            >
+              <option>Any Season</option>
+              <option>Spring</option>
+              <option>Summer</option>
+              <option>Winter</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            class="rounded-xl bg-amber-500 px-8 py-3 text-sm font-bold text-[#18253d] hover:bg-amber-400"
+            @click="selectedRegion = 'All Regions'"
+          >
+            Explore
           </button>
         </div>
       </div>
     </section>
+
+    <main class="mx-auto max-w-7xl px-5 py-12 md:px-10 md:py-16">
+      <div
+        class="flex flex-col gap-5 border-b border-slate-200 pb-6 md:flex-row md:items-end md:justify-between"
+      >
+        <div>
+          <p
+            class="text-xs font-semibold uppercase tracking-[0.2em] text-[#087d72]"
+          >
+            Choose your next chapter
+          </p>
+          <h2 class="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
+            Places that stay with you
+          </h2>
+        </div>
+        <p class="max-w-sm text-sm leading-6 text-[#65728a] md:text-right">
+          {{ filteredDestinations.length }} destinations selected for your kind
+          of escape.
+        </p>
+      </div>
+      <nav
+        class="mt-7 flex gap-2 overflow-x-auto pb-1"
+        aria-label="Destination regions"
+      >
+        <button
+          v-for="region in regions"
+          :key="region"
+          type="button"
+          :class="[
+            'whitespace-nowrap rounded-full border px-4 py-2 text-xs font-semibold transition-colors',
+            selectedRegion === region
+              ? 'border-[#0d224a] bg-[#0d224a] text-white'
+              : 'border-slate-200 bg-white text-[#53637c] hover:border-[#0d224a]',
+          ]"
+          @click="selectedRegion = region"
+        >
+          {{ region }}
+        </button>
+      </nav>
+      <div
+        v-if="filteredDestinations.length"
+        class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+      >
+        <article
+          v-for="destination in filteredDestinations"
+          :key="destination.slug"
+          class="group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+          :class="
+            destination.slug === 'amalfi-coast'
+              ? 'md:col-span-2 lg:col-span-2'
+              : ''
+          "
+        >
+          <div
+            class="relative h-72 overflow-hidden"
+            :class="destination.slug === 'amalfi-coast' ? 'lg:h-[390px]' : ''"
+          >
+            <img
+              :src="destination.image"
+              :alt="destination.name"
+              class="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+            />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-[#081826]/85 via-[#081826]/10 to-transparent"
+            />
+            <div class="absolute inset-x-0 bottom-0 p-6 text-white">
+              <div class="flex items-end justify-between gap-3">
+                <div>
+                  <p class="text-xs uppercase tracking-[0.2em] text-white/75">
+                    {{ destination.country }}
+                  </p>
+                  <h3
+                    class="sabay-display mt-2 text-4xl font-black md:text-5xl"
+                  >
+                    {{ destination.name }}
+                  </h3>
+                </div>
+                <span
+                  class="shrink-0 rounded-full bg-white/15 px-3 py-1.5 text-[10px] backdrop-blur-sm"
+                  >{{ destination.metric }}</span
+                >
+              </div>
+              <p class="mt-3 max-w-lg text-sm leading-6 text-white/80">
+                {{ destination.description }}
+              </p>
+              <NuxtLink
+                :to="`/destinations/${destination.slug}`"
+                class="mt-4 inline-flex items-center rounded-full border border-white/70 bg-white/10 px-4 py-2 text-xs font-semibold backdrop-blur-sm hover:bg-white hover:text-[#1d2f52]"
+                >Explore destination
+                <span class="ml-2" aria-hidden="true">-&gt;</span></NuxtLink
+              >
+            </div>
+          </div>
+        </article>
+      </div>
+      <div
+        v-else
+        class="mt-8 bg-white px-6 py-16 text-center shadow-sm ring-1 ring-slate-200"
+      >
+        <p class="font-semibold">No destinations found</p>
+        <p class="mt-2 text-sm text-[#65728a]">
+          Try another search, season, or region.
+        </p>
+      </div>
+      <section
+        class="mt-14 flex flex-col gap-6 bg-[#e5f0ed] p-8 md:flex-row md:items-center md:justify-between md:p-10"
+      >
+        <div>
+          <p
+            class="text-xs font-semibold uppercase tracking-[0.2em] text-[#087d72]"
+          >
+            Not sure where to begin?
+          </p>
+          <h2 class="mt-2 text-2xl font-bold text-[#0d224a]">
+            Let your stay find its setting.
+          </h2>
+          <p class="mt-2 max-w-xl text-sm leading-6 text-[#53637c]">
+            Our concierge can match your mood, pace, and travel style with a
+            destination made for you.
+          </p>
+        </div>
+        <NuxtLink
+          to="/contact"
+          class="inline-flex shrink-0 items-center justify-center bg-[#0d224a] px-5 py-3 text-sm font-semibold text-white hover:bg-[#087d72]"
+          >Talk to a concierge</NuxtLink
+        >
+      </section>
+    </main>
   </div>
 </template>

@@ -12,6 +12,7 @@
 }
 
 html {
+  font-size: 112.5%;
   scroll-behavior: smooth;
 }
 
@@ -22,7 +23,7 @@ body {
   font-family: "Avenir Next", "Segoe UI", sans-serif;
 }
 
-* {
+* { 
   box-sizing: border-box;
 }
 

@@ -1,140 +1,150 @@
 <template>
-  <div class="contact-page">
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="hero-content">
-        <h1>Contact Us</h1>
-        <p>We are here to help with your next booking.</p>
+  <div class="min-h-screen bg-[#f2f2f2] text-slate-800">
+    <section class="bg-[#0d3d8f] px-5 py-12 text-white md:px-8 lg:px-10">
+      <div class="mx-auto max-w-[1200px]">
+        <h1 class="text-4xl font-bold tracking-[-0.05em] md:text-[4rem]">
+          Get in Touch
+        </h1>
+        <p class="mt-5 max-w-[760px] text-lg text-slate-200 md:text-[1.3rem]">
+          Have questions? We are here to help. Send us a message and we will
+          respond within 24 hours.
+        </p>
       </div>
     </section>
 
-    <!-- Main Content -->
-    <section class="contact-content">
-      <div class="container">
-        <div class="content-grid">
-          <!-- Inquiry Form -->
-          <div class="inquiry-section">
-            <h2>Inquire</h2>
-            <p class="description">
-              Share your travel aspirations. A dedicated specialist will respond
-              within two hours.
-            </p>
+    <section class="px-5 py-14 md:px-8 lg:px-10">
+      <div
+        class="mx-auto max-w-[1200px] lg:grid lg:grid-cols-[0.95fr_1.45fr] lg:gap-10"
+      >
+        <div>
+          <h2 class="text-2xl font-bold text-[#0d224a] md:text-[2.3rem]">
+            Contact Information
+          </h2>
 
-            <form @submit.prevent="submitInquiry" class="inquiry-form">
-              <!-- Full Name -->
-              <div class="form-group">
-                <label for="fullname">FULL NAME</label>
-                <input
-                  id="fullname"
-                  v-model="form.fullName"
-                  type="text"
-                  placeholder="Your name"
-                  required
-                />
+          <div class="mt-8 space-y-5">
+            <div class="flex items-center gap-4 rounded-2xl bg-[#f6f7fb] p-5 shadow-sm ring-1 ring-slate-200" >
+              <div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#eaf1ff] text-[#1c5be1]" >
+                <svg viewBox="0 0 24 24"class="h-6 w-6 fill-none stroke-current stroke-[1.8]" >
+                  <path
+                    d="M12 21s6-5.686 6-11a6 6 0 1 0-12 0c0 5.314 6 11 6 11Z"
+                  />
+                  <circle cx="12" cy="10" r="2.5" />
+                </svg>
               </div>
-
-              <!-- Email Address -->
-              <div class="form-group">
-                <label for="email">EMAIL ADDRESS</label>
-                <input
-                  id="email"
-                  v-model="form.email"
-                  type="email"
-                  placeholder="name@example.com"
-                  required
-                />
-              </div>
-
-              <!-- Inquiry Type -->
-              <div class="form-group">
-                <label for="inquiryType">INQUIRY TYPE</label>
-                <select id="inquiryType" v-model="form.inquiryType" required>
-                  <option value="">Select inquiry type</option>
-                  <option value="private-villa">
-                    Private Villa Reservation
-                  </option>
-                  <option value="luxury-hotel">Luxury Hotel Booking</option>
-                  <option value="experience">Experience Booking</option>
-                  <option value="concierge">Concierge Service</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              <!-- Message -->
-              <div class="form-group">
-                <label for="message">MESSAGE</label>
-                <textarea
-                  id="message"
-                  v-model="form.message"
-                  placeholder="Detail your specific requirements..."
-                  rows="6"
-                  required
-                ></textarea>
-              </div>
-
-              <!-- Submit Button -->
-              <button type="submit" class="btn-submit">
-                Send Inquiry
-                <span class="arrow">→</span>
-              </button>
-            </form>
-          </div>
-
-          <!-- Immediate Assistance & Global Offices -->
-          <div class="right-section">
-            <!-- Immediate Assistance -->
-            <div class="assistance-section">
-              <h3>Immediate Assistance</h3>
-              <p class="description">
-                Connect instantly with our global butler desk.
-              </p>
-
-              <div class="assistance-methods">
-                <div class="assistance-item">
-                  <div class="icon whatsapp">💬</div>
-                  <div class="details">
-                    <h4>WhatsApp Concierge</h4>
-                    <p>Avg. response: 5 mins</p>
-                  </div>
-                  <span class="arrow-link">→</span>
+              <div>
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl font-bold text-[#0d224a]">Visit Us</span >
                 </div>
-
-                <div class="assistance-item">
-                  <div class="icon phone">☎️</div>
-                  <div class="details">
-                    <h4>24/7 Butler Support</h4>
-                    <p>+1 (800) SABAYUP</p>
-                  </div>
-                  <span class="arrow-link">→</span>
-                </div>
+                <p class="mt-2 text-base text-slate-700">  123 Auto Tik Tla, Phnom Penh City.</p>
               </div>
             </div>
 
-            <!-- Global Offices -->
-            <div class="offices-section">
-              <h3>Global Offices</h3>
+            <div class="flex items-center gap-4 rounded-2xl bg-[#f6f7fb] p-5 shadow-sm ring-1 ring-slate-200" >
+              <div class="flex h-12 w-12 items-center justify-center rounded-full bg-[#eaf1ff] text-[#1c5be1]" >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-6 w-6 fill-none stroke-current stroke-[1.8]"
+                >
+                  <path
+                    d="M4 6.5A2.5 2.5 0 0 1 6.5 4h.86a2 2 0 0 1 1.93 1.51l.5 2.27a2 2 0 0 1-.57 1.92L7.9 10.8a15.39 15.39 0 0 0 5.3 5.3l.1-.44a2 2 0 0 1 1.92-.57l2.27.5A2 2 0 0 1 20 17.64v.86A2.5 2.5 0 0 1 17.5 21h-.7A16.8 16.8 0 0 1 4 6.2v-.7Z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl font-bold text-[#0d224a]">Call Us</span>
+                </div>
+                <p class="mt-2 text-base text-slate-700">+(885) XXX XXX</p>
+              </div>
+            </div>
 
-              <div class="office">
-                <h4>PARIS</h4>
-                <p>15 Place Vendôme, 75001</p>
-                <div class="office-map">
-                  <img
-                    src="https://via.placeholder.com/400x200?text=Paris"
-                    alt="Paris Office Map"
+            <div
+              class="flex items-center gap-4 rounded-2xl bg-[#f6f7fb] p-5 shadow-sm ring-1 ring-slate-200"
+            >
+              <div
+                class="flex h-12 w-12 items-center justify-center rounded-full bg-[#eaf1ff] text-[#1c5be1]"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  class="h-6 w-6 fill-none stroke-current stroke-[1.8]"
+                >
+                  <rect x="3" y="5" width="18" height="14" rx="2" />
+                  <path d="m4 7 8 6 8-6" />
+                </svg>
+              </div>
+              <div>
+                <div class="flex items-center gap-3">
+                  <span class="text-2xl font-bold text-[#0d224a]">Email Us</span>
+                </div>
+                <p class="mt-2 text-base text-slate-700">info@sabaystay.com</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-10 lg:mt-0">
+          <div class="rounded-[20px] bg-[#f4f3f2] p-8 shadow-sm ring-1 ring-slate-200 md:p-8" >
+            <button type="button"class="inline-flex items-center rounded-xl bg-[#f5c94d] px-5 py-3 text-sm font-semibold text-[#0d224a] shadow-sm transition hover:brightness-95" >
+              Send us a message
+            </button>
+
+            <form @submit.prevent="submitInquiry" class="mt-8">
+              <div class="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label for="fullName"class="mb-2 block text-lg font-semibold text-[#0d224a]" >Your Name </label>
+                  <input
+                    id="fullName"
+                    v-model="form.fullName"
+                    type="text"
+                    placeholder="Enter your name"
+                    required
+                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#0d224a] focus:outline-none focus:ring-2 focus:ring-[#0d224a]/10"
+                  />
+                </div>
+
+                <div>
+                <label for="email" class="mb-2 block text-lg font-semibold text-[#0d224a]">Your Email </label>
+                  <input
+                    id="email"
+                    v-model="form.email"
+                    type="email"
+                    placeholder="example@gmail.com"
+                    required
+                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#0d224a] focus:outline-none focus:ring-2 focus:ring-[#0d224a]/10"
                   />
                 </div>
               </div>
-
-              <div class="office">
-                <h4>TOKYO</h4>
-                <p>Ginza 8-Chome, Chuo City</p>
+             <div class="mt-5">
+                <label for="phone" class="mb-2 block text-lg font-semibold text-[#0d224a]" >Your Phone </label>
+                <input
+                  id="phone"
+                  v-model="form.phone"
+                  type="tel"
+                  placeholder="+855 12 345 678"
+                  class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#0d224a] focus:outline-none focus:ring-2 focus:ring-[#0d224a]/10"
+                />
               </div>
 
-              <div class="office">
-                <h4>NEW YORK</h4>
-                <p>111 West 57th St, Manhattan</p>
+              <div class="mt-5">
+                <label for="message" class="mb-2 block text-lg font-semibold text-[#0d224a]"  > Your Message  </label>
+                <textarea
+                  id="message"
+                  v-model="form.message"
+                  rows="7"
+                  placeholder="Write your message..."
+                  required
+                  class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-slate-800 placeholder:text-slate-400 focus:border-[#0d224a] focus:outline-none focus:ring-2 focus:ring-[#0d224a]/10"
+                ></textarea>
               </div>
-            </div>
+
+              <button type="submit"class="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#0d3d8f] px-6 py-4 text-base font-semibold text-white shadow-sm transition hover:brightness-110">
+                <svg viewBox="0 0 24 24"class="h-5 w-5 fill-none stroke-current stroke-[2]">
+                  <path d="M5 12h14" />
+                  <path d="m13 5 7 7-7 7" />
+                </svg>
+                Send Message
+              </button>
+            </form>
           </div>
         </div>
       </div>
@@ -148,335 +158,31 @@ import { ref } from "vue";
 interface ContactForm {
   fullName: string;
   email: string;
-  inquiryType: string;
+  phone: string;
   message: string;
 }
 
 const form = ref<ContactForm>({
   fullName: "",
   email: "",
-  inquiryType: "",
+  phone: "",
   message: "",
 });
 
 const submitInquiry = async () => {
   try {
-    // TODO: Implement form submission to backend
     console.log("Form submitted:", form.value);
-    alert("Thank you for your inquiry! We will respond within 2 hours.");
+    alert("Thank you for your message. We will respond within 24 hours.");
 
-    // Reset form
     form.value = {
       fullName: "",
       email: "",
-      inquiryType: "",
+      phone: "",
       message: "",
     };
   } catch (error) {
     console.error("Error submitting inquiry:", error);
-    alert("There was an error submitting your inquiry. Please try again.");
+    alert("There was an error submitting your message. Please try again.");
   }
 };
 </script>
-
-<style scoped>
-.contact-page {
-  min-height: 100vh;
-  background: #fff;
-}
-
-/* Hero Section */
-.hero-section {
-  background:
-    linear-gradient(
-      135deg,
-      rgba(25, 35, 71, 0.95) 0%,
-      rgba(25, 35, 71, 0.85) 100%
-    ),
-    url("https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaC1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80");
-  background-size: cover;
-  background-position: center;
-  padding: 100px 20px;
-  text-align: center;
-  color: white;
-  margin-bottom: 60px;
-}
-
-.hero-content h1 {
-  font-size: 48px;
-  font-weight: 700;
-  margin-bottom: 20px;
-  letter-spacing: -1px;
-}
-
-.hero-content p {
-  font-size: 18px;
-  opacity: 0.95;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-/* Main Content */
-.contact-content {
-  padding: 40px 20px 60px;
-}
-
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.content-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 60px;
-  align-items: start;
-}
-
-/* Inquiry Section */
-.inquiry-section h2 {
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 12px;
-  color: #192347;
-}
-
-.inquiry-section .description {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 32px;
-  line-height: 1.6;
-}
-
-.inquiry-form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group label {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #192347;
-  margin-bottom: 8px;
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
-  padding: 12px 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: all 0.2s ease;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-  outline: none;
-  border-color: #192347;
-  box-shadow: 0 0 0 2px rgba(25, 35, 71, 0.1);
-}
-
-.form-group input::placeholder,
-.form-group textarea::placeholder {
-  color: #999;
-}
-
-.btn-submit {
-  background: #192347;
-  color: white;
-  padding: 14px 24px;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.3s ease;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  align-self: flex-start;
-  margin-top: 12px;
-}
-
-.btn-submit:hover {
-  background: #0f1a35;
-  transform: translateX(4px);
-}
-
-.btn-submit .arrow {
-  font-size: 16px;
-  transition: transform 0.3s ease;
-}
-
-.btn-submit:hover .arrow {
-  transform: translateX(4px);
-}
-
-/* Right Section */
-.right-section {
-  display: flex;
-  flex-direction: column;
-  gap: 40px;
-}
-
-/* Immediate Assistance */
-.assistance-section h3,
-.offices-section h3 {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: #192347;
-}
-
-.assistance-section .description {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 24px;
-}
-
-.assistance-methods {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.assistance-item {
-  background: #e8f5e9;
-  padding: 20px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.assistance-item:hover {
-  background: #dcecd8;
-  border-color: #4caf50;
-  transform: translateX(4px);
-}
-
-.assistance-item .icon {
-  font-size: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  background: white;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.assistance-item .details {
-  flex: 1;
-}
-
-.assistance-item h4 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #192347;
-  margin: 0 0 4px;
-}
-
-.assistance-item p {
-  font-size: 12px;
-  color: #666;
-  margin: 0;
-}
-
-.assistance-item .arrow-link {
-  color: #4caf50;
-  font-weight: 600;
-  transition: transform 0.3s ease;
-}
-
-.assistance-item:hover .arrow-link {
-  transform: translateX(4px);
-}
-
-/* Global Offices */
-.offices-section {
-  border-top: 1px solid #e0e0e0;
-  padding-top: 40px;
-}
-
-.offices-section h3 {
-  margin-bottom: 24px;
-}
-
-.office {
-  margin-bottom: 28px;
-}
-
-.office h4 {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #192347;
-  margin: 0 0 6px;
-}
-
-.office p {
-  font-size: 14px;
-  color: #666;
-  margin: 0 0 12px;
-  line-height: 1.5;
-}
-
-.office-map {
-  width: 100%;
-  height: 200px;
-  border-radius: 6px;
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-
-.office-map img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  .hero-content h1 {
-    font-size: 36px;
-  }
-
-  .hero-content p {
-    font-size: 16px;
-  }
-
-  .inquiry-section h2 {
-    font-size: 24px;
-  }
-
-  .assistance-section h3,
-  .offices-section h3 {
-    font-size: 18px;
-  }
-}
-</style>

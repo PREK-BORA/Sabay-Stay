@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import BoraImage from "~/assets/css/image/developer.jpg";
+import vannetImage from "~/assets/css/image/photo_2026-09-10_21-56-47.jpg";
+import MakaraImage from "~/assets/css/image/ChatGPT Image Sep 11, 2026, 03_21_43 PM.png";
+
 const differences = [
   {
     icon: "☆",
@@ -20,6 +24,30 @@ const differences = [
     title: "Exclusive Access",
     description:
       "Unlock member-only benefits, complimentary upgrades, and bespoke experiences not available to the general public.",
+  },
+];
+
+const developers = [
+  {
+    name: "PREK BORA",
+    role: "Frontend Developer",
+    description:
+      "Responsible for designing and developing the customer-facing side of SabayStay. This developer focuses on creating a modern, responsive, and user-friendly interface using Nuxt.js and Vue.js, including the Home, Hotels, Destinations, Experiences, Services, Offers, and Customer Dashboard pages.",
+    image: BoraImage,
+  },
+  {
+    name: "TIM VANNET",
+    role: "Frontend Developer",
+    description:
+      "Responsible for developing the hotel management and booking features of SabayStay. This developer works on hotel and room management, room availability, booking processes, booking details, the hotel owner dashboard, and revenue-related features.",
+    image: vannetImage,
+  },
+  {
+    name: "MEKARA",
+    role: "Backend Developer",
+    description:
+      "Responsible for the backend services, authentication, database, and administration system. This developer manages Firebase Authentication, user roles, database structure, Admin Dashboard, security rules, user management, and system deployment.",
+    image: MakaraImage,
   },
 ];
 </script>
@@ -96,6 +124,54 @@ const differences = [
             <p class="mt-1.5 text-xs leading-4 text-[#5a6070]">
               {{ difference.description }}
             </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white px-6 py-14 sm:py-16">
+      <div class="mx-auto max-w-6xl">
+        <div class="text-center">
+          <p
+            class="text-xs font-semibold uppercase tracking-[0.2em] text-[#087d72]"
+          >
+            The people behind SabayStay
+          </p>
+          <h2 class="sabay-display mt-2 text-3xl font-bold text-[#07166b]">
+            MEET OUR DEVELOPERS
+          </h2>
+          <p class="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#5b6070]">
+            A small team with a shared belief that great technology should make
+            beautiful travel feel effortless.
+          </p>
+        </div>
+
+        <div class="mt-9 grid gap-5 md:grid-cols-3">
+          <article
+            v-for="developer in developers"
+            :key="developer.name"
+            class="group overflow-hidden rounded-lg border border-[#e5e6ea] bg-[#fafbfc] transition duration-300 hover:-translate-y-1 hover:shadow-[0_10px_25px_rgba(29,47,82,0.1)]"
+          >
+            <div class="aspect-square overflow-hidden bg-[#e7edf4]">
+              <img
+                :src="developer.image"
+                :alt="developer.name"
+                class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              />
+            </div>
+            <div class="p-5">
+              <p
+                class="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#087d72]"
+              >
+                {{ developer.role }}
+              </p>
+              <h3 class="sabay-display mt-2 text-2xl font-bold text-[#07166b]">
+                {{ developer.name }}
+              </h3>
+              <p class="mt-2 text-xs leading-5 text-[#5a6070]">
+                {{ developer.description }}
+              </p>
+            </div>
           </article>
         </div>
       </div>
