@@ -13,6 +13,17 @@
         + Add New Property
       </button>
     </div>
+    
+
+    <!-- Search Input -->
+    <div class="max-w-md">
+      <input 
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search properties by name or location..."
+        class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-950 transition shadow-xs"
+      />
+    </div>
 
     <!-- Loading State Skeleton -->
     <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -24,9 +35,9 @@
     </div>
 
     <!-- READ: Hotel List Grid -->
-    <div v-else-if="hotels.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div v-else-if="filteredHotels.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div 
-        v-for="hotel in hotels" 
+        v-for="hotel in filteredHotels" 
         :key="hotel.id" 
         class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow"
       >
@@ -43,7 +54,7 @@
             </span>
           </div>
           <div class="p-5">
-            <span class="text-[10px] font-bold text-indigo-950 uppercase tracking-wider block mb-1">{{ hotel.city || 'Unspecified Location' }}</span>
+            <span class="text-[10px] font-bold text-indigo-950 uppercase tracking-wider block mb-1">{{ hotel.city || hotel.location || 'Unspecified Location' }}</span>
             <h2 class="text-lg font-bold text-gray-900 mb-2">{{ hotel.name }}</h2>
             <p class="text-xs text-gray-500 line-clamp-2 mb-4">{{ hotel.description || 'No description provided.' }}</p>
           </div>
@@ -51,15 +62,13 @@
 
         <div class="p-5 pt-0 border-t border-gray-50 flex items-center justify-between mt-auto">
           <div>
-            <span class="text-lg font-bold text-indigo-950">${{ hotel.pricePerNight || 0 }}</span>
-            <span class="text-xs text-gray-500"> / night</span>
           </div>
           <div class="flex items-center gap-3">
             <button @click="openModal(hotel)" class="text-xs font-bold text-amber-600 hover:underline">
               Edit
             </button>
             <NuxtLink 
-              :to="`/owner/rooms?hotelId=${hotel.id}`" 
+              :to="`/owner/room?hotelId=${hotel.id}`" 
               class="text-xs font-bold text-indigo-950 hover:underline"
             >
               Rooms →
@@ -75,11 +84,14 @@
 
     <!-- Empty State -->
     <div v-else class="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-xs">
-      <p class="text-gray-500 text-sm mb-4">No properties listed yet.</p>
+      <p class="text-gray-500 text-sm mb-4">
+        {{ searchQuery ? 'No properties matching your search.' : 'No properties listed yet.' }}
+      </p>
       <button @click="openModal()" class="px-4 py-2 text-xs font-semibold bg-indigo-950 text-white rounded-xl">
         Add Your First Hotel
       </button>
     </div>
+    
 
     <!-- CREATE & UPDATE: Inline Modal Card -->
     <div 
@@ -120,17 +132,7 @@
                 class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
               />
             </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Price / Night ($)</label>
-              <input 
-                v-model="form.pricePerNight" 
-                type="number" 
-                min="0"
-                placeholder="150" 
-                required 
-                class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
-              />
-            </div>
+          
           </div>
 
           <div>
@@ -176,32 +178,49 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useFirestoreDB } from '~/composables/useFirestoreDB'
+import { ref, computed, onMounted } from 'vue'
 
 definePageMeta({ layout: 'owner' })
 
-// Destructure updateHotel (or updateDoc wrapper) from your composable
 const { getHotels, addHotel, updateHotel, deleteHotel } = useFirestoreDB()
 
+// 1. Initial State: Read immediately from localStorage if available
 const hotels = ref([])
 const loading = ref(true)
+
+const searchQuery = ref('')
 const showAddModal = ref(false)
 const isSubmitting = ref(false)
 const editingId = ref(null)
 
 const fallbackImage = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80'
-
 const initialForm = { name: '', city: '', pricePerNight: '', description: '', image: '' }
 const form = ref({ ...initialForm })
+
+// Helper to keep localStorage synced
+const saveLocalHotels = (data) => {
+  if (import.meta.client) {
+    localStorage.setItem('sabay_hotels_cache', JSON.stringify(data))
+  }
+}
+
+// Search Filter
+const filteredHotels = computed(() => {
+  if (!searchQuery.value.trim()) return hotels.value
+  const query = searchQuery.value.toLowerCase()
+  return hotels.value.filter(hotel => 
+    hotel.name?.toLowerCase().includes(query) ||
+    (hotel.city || hotel.location)?.toLowerCase().includes(query)
+  )
+})
 
 const openModal = (hotelToEdit = null) => {
   if (hotelToEdit) {
     editingId.value = hotelToEdit.id
     form.value = {
       name: hotelToEdit.name || '',
-      city: hotelToEdit.city || '',
-      pricePerNight: hotelToEdit.pricePerNight || '',
+      city: hotelToEdit.city || hotelToEdit.location || '',
+      pricePerNight: hotelToEdit.pricePerNight || hotelToEdit.price || '',
       description: hotelToEdit.description || '',
       image: hotelToEdit.image || ''
     }
@@ -218,70 +237,98 @@ const closeModal = () => {
   form.value = { ...initialForm }
 }
 
-// READ
+// ⚡ INSTANT LOAD FROM LOCALSTORAGE
 const loadHotels = async () => {
-  loading.value = true
+  // Load local cache instantly (0ms delay)
+  if (import.meta.client) {
+    const cached = localStorage.getItem('sabay_hotels_cache')
+    if (cached) {
+      try {
+        hotels.value = JSON.parse(cached)
+        loading.value = false // Hide loading skeleton immediately!
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }
+
+  // Sync background data from Firestore
   try {
     const res = await getHotels()
-    hotels.value = res || []
+    if (res) {
+      hotels.value = res
+      saveLocalHotels(res)
+    }
   } catch (err) {
-    console.error('Failed to load hotels:', err)
+    console.error('Failed to sync from Firestore:', err)
   } finally {
     loading.value = false
   }
 }
 
-// CREATE & UPDATE
+// ⚡ INSTANT SAVE & UPDATE
 const handleSubmit = async () => {
-  if (isSubmitting.value) return
-  isSubmitting.value = true
+  const validImage = form.value.image?.trim() ? form.value.image : fallbackImage
 
   const payload = {
     name: form.value.name,
     city: form.value.city,
     pricePerNight: Number(form.value.pricePerNight) || 0,
     description: form.value.description || '',
-    image: form.value.image || fallbackImage
+    image: validImage
   }
 
-  try {
-    if (editingId.value) {
-      // UPDATE
-      if (updateHotel) {
-        await updateHotel(editingId.value, payload)
-      }
-      const index = hotels.value.findIndex(h => h.id === editingId.value)
-      if (index !== -1) {
-        hotels.value[index] = { ...hotels.value[index], ...payload }
-      }
-    } else {
-      // CREATE
-      const newHotelData = { ...payload, rating: 5.0, reviewsCount: 0, createdAt: new Date().toISOString() }
-      const docRef = await addHotel(newHotelData)
-      hotels.value.unshift({
-        id: docRef?.id || Date.now().toString(),
-        ...newHotelData
-      })
+  if (editingId.value) {
+    const targetId = editingId.value
+    const index = hotels.value.findIndex(h => h.id === targetId)
+    if (index !== -1) {
+      hotels.value[index] = { ...hotels.value[index], ...payload }
+      saveLocalHotels(hotels.value)
     }
-
     closeModal()
-  } catch (err) {
-    console.error('Firestore Action Error:', err)
-    alert('Failed to process property: ' + (err.message || 'Check connection.'))
-  } finally {
-    isSubmitting.value = false
+    
+    // Background Firestore Update
+    updateHotel(targetId, payload).catch(err => console.error('Firestore update failed:', err))
+  } else {
+    const tempId = 'temp-' + Date.now()
+    const newHotel = { id: tempId, ...payload, rating: 5.0, reviewsCount: 0 }
+    hotels.value.unshift(newHotel)
+    saveLocalHotels(hotels.value)
+    closeModal()
+
+    // Background Firestore Add
+    addHotel(payload).then(docRef => {
+      if (docRef?.id) {
+        const item = hotels.value.find(h => h.id === tempId)
+        if (item) item.id = docRef.id
+        saveLocalHotels(hotels.value)
+      }
+    }).catch(err => {
+      console.error('Firestore add failed:', err)
+      hotels.value = hotels.value.filter(h => h.id !== tempId)
+      saveLocalHotels(hotels.value)
+    })
   }
 }
 
-// DELETE
+// ⚡ PERMANENT DELETE (Instantly removed from Local Storage + Firestore)
 const handleDelete = async (id) => {
-  if (confirm('Are you sure you want to delete this property?')) {
-    try {
-      await deleteHotel(id)
-      hotels.value = hotels.value.filter(h => h.id !== id)
-    } catch (err) {
-      alert('Error deleting property: ' + err.message)
-    }
+  if (!confirm('Are you sure you want to delete this property?')) return
+
+  const backup = [...hotels.value]
+  
+  // 1. Delete from UI and localStorage instantly
+  hotels.value = hotels.value.filter(h => h.id !== id)
+  saveLocalHotels(hotels.value)
+
+  // 2. Delete from Firestore completely
+  try {
+    await deleteHotel(id)
+  } catch (err) {
+    console.error('Firestore delete failed:', err)
+    alert('Failed to delete on server: ' + err.message)
+    hotels.value = backup
+    saveLocalHotels(backup)
   }
 }
 
