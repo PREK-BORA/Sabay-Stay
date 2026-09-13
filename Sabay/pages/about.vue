@@ -43,7 +43,7 @@ const developers = [
     image: vannetImage,
   },
   {
-    name: "MEKARA",
+    name: "MAKARA",
     role: "Backend Developer",
     description:
       "Responsible for the backend services, authentication, database, and administration system. This developer manages Firebase Authentication, user roles, database structure, Admin Dashboard, security rules, user management, and system deployment.",
@@ -55,7 +55,7 @@ const developers = [
 <template>
   <div class="bg-white text-[#202638]">
     <section
-      class="relative flex min-h-107.5 items-center justify-center overflow-hidden text-center"
+      class="relative flex min-h-[430px] items-center justify-center overflow-hidden text-center"
     >
       <img
         src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1800&q=85"
@@ -64,7 +64,7 @@ const developers = [
       />
       <div class="absolute inset-0 bg-white/45" />
       <div
-        class="absolute inset-x-0 bottom-0 h-36 bg-linear-to-t from-white to-transparent"
+        class="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-white to-transparent"
       />
       <div class="relative z-10 mx-auto max-w-3xl px-6 pt-5">
         <h1
@@ -72,7 +72,7 @@ const developers = [
         >
           Our Story: Elevating the Art of Travel
         </h1>
-        <p class="mx-auto mt-3 max-w-130 text-sm leading-5 text-[#384055]">
+        <p class="mx-auto mt-3 max-w-[520px] text-sm leading-5 text-[#384055]">
           SabayStay was born from a passion for discovery and a commitment to
           unparalleled luxury. We believe that where you stay is as important as
           where you go.
@@ -86,12 +86,12 @@ const developers = [
         Our Mission
       </h2>
       <p class="mt-4 text-sm leading-5 text-[#4b5262]">
-        To connect discerning travelers with the world&apos;s most extraordinary
+        To connect discerning travelers with the world's most extraordinary
         stays, transforming ordinary trips into unforgettable, soul-enriching
         journeys. We meticulously curate every property, ensuring a seamless
         blend of striking design, impeccable service, and profound connection to
         the local environment. Our goal is to redefine luxury
-        travel&mdash;making it highly personalized, deeply sustainable, and
+        travel—making it highly personalized, deeply sustainable, and
         effortlessly refined.
       </p>
     </section>
@@ -179,7 +179,7 @@ const developers = [
 
     <section class="bg-[#080d70] px-6 py-14 text-center text-white sm:py-16">
       <h2 class="sabay-display text-2xl font-bold">Join the Elite</h2>
-      <p class="mx-auto mt-3 max-w-107.5 text-sm leading-5 text-[#c5c9f2]">
+      <p class="mx-auto mt-3 max-w-[430px] text-sm leading-5 text-[#c5c9f2]">
         Elevate your travel experiences. Register for a SabayStay membership to
         access our curated collection and exclusive concierge services.
       </p>

@@ -1,3 +1,5 @@
+import { ref } from "vue";
+
 export interface FavoriteHotel {
   id: string;
   name: string;
@@ -9,19 +11,24 @@ export interface FavoriteHotel {
 }
 
 const STORAGE_KEY = "sabay-favorites";
+const favorites = ref<FavoriteHotel[]>([]);
+let isInitialized = false;
+
+function initFavorites() {
+  if (isInitialized || !import.meta.client) return;
+
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    favorites.value = saved ? JSON.parse(saved) : [];
+  } catch (error) {
+    console.error("Failed to load favorites:", error);
+    favorites.value = [];
+  }
+  isInitialized = true;
+}
 
 export function useFavorites() {
-  const favorites = ref<FavoriteHotel[]>([]);
-
-  if (import.meta.client) {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      favorites.value = saved ? JSON.parse(saved) : [];
-    } catch (error) {
-      console.error("Failed to load favorites:", error);
-      favorites.value = [];
-    }
-  }
+  initFavorites();
 
   function saveFavorites() {
     if (!import.meta.client) return;

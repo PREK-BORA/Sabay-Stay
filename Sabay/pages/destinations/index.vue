@@ -14,11 +14,11 @@ type Destination = {
 
 const destinations: Destination[] = [
   {
-    slug: "khos rong",
+    slug: "koh-rong",
     country: "Cambodia",
-    name: "Khos Rong",
+    name: "Koh Rong",
     description:
-      "Dramatic cliffs, pastel villages, and the sparkling Mediterranean.",
+      "Dramatic coastline, pristine turquoise waters, and vibrant island life.",
     image:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfn2DaMzZdw2EOSNDIxV5DJkk6ky6i3VX42qaO89PsiA&s=10",
     region: "Coastal",
@@ -26,10 +26,10 @@ const destinations: Destination[] = [
     metric: "24k travelers this year",
   },
   {
-    slug: "Angkor Wat",
+    slug: "angkor-wat",
     country: "Cambodia",
     name: "Angkor Wat",
-    description: "Ancient temple complex and cultural heritage.",
+    description: "Ancient temple complex and profound cultural heritage.",
     image:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0g-_gfwa3HmXM_n-HlMgDdEoyhlLw9kj1qWb2RG3x1g&s=10",
     region: "Cultural",
@@ -37,32 +37,33 @@ const destinations: Destination[] = [
     metric: "98% guest love",
   },
   {
-    slug: "Khos Sdach",
+    slug: "koh-sdach",
     country: "Cambodia",
-    name: "khos Sdach",
-    description: "Ultimate overwater luxury and quiet island days.",
+    name: "Koh Sdach",
+    description: "Ultimate overwater serenity and quiet island days.",
     image:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnEu51DLvPSb_YK6TanBNh2MTOWmqowBc0vhUwVgxfXA&s=10",
-    region: "coastal",
+    region: "Coastal",
     season: "Winter",
     metric: "4.9 guest rating",
   },
   {
-    slug: "khos Songsa",
+    slug: "song-saa",
     country: "Cambodia",
-    name: "khos Songsa",
-    description: "Eco-luxury amid vibrant biodiversity.",
+    name: "Song Saa",
+    description: "Eco-luxury private islands amid vibrant biodiversity.",
     image:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSValg7gR1_INGa4FS6OZT3Mxpyuf4mE7TA9LmSDU0Mng&s=10",
-    region: "coastal",
+    region: "Coastal",
     season: "Winter",
     metric: "Wild by nature",
   },
   {
-    slug: "Chiso Mountain",
+    slug: "chiso-mountain",
     country: "Cambodia",
     name: "Chiso Mountain",
-    description: "Pristine slopes and exclusive alpine retreats.",
+    description:
+      "Panoramic vistas, historical temples, and exclusive retreats.",
     image:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVSEUpnDttq4dCn9WvwRlERdoHe4r5siVyDTKoF8amEg&s=10",
     region: "Mountains",
@@ -207,18 +208,14 @@ const filteredDestinations = computed(() => {
         class="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3"
       >
         <article
-          v-for="destination in filteredDestinations"
+          v-for="(destination, index) in filteredDestinations"
           :key="destination.slug"
           class="group overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition duration-300 hover:-translate-y-1 hover:shadow-xl"
-          :class="
-            destination.slug === 'amalfi-coast'
-              ? 'md:col-span-2 lg:col-span-2'
-              : ''
-          "
+          :class="index === 0 ? 'md:col-span-2 lg:col-span-2' : ''"
         >
           <div
             class="relative h-72 overflow-hidden"
-            :class="destination.slug === 'amalfi-coast' ? 'lg:h-[390px]' : ''"
+            :class="index === 0 ? 'lg:h-[390px]' : ''"
           >
             <img
               :src="destination.image"

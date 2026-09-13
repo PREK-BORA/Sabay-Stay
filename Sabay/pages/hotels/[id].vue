@@ -3,12 +3,18 @@ import { computed, ref } from "vue";
 import { signInAnonymously } from "firebase/auth";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useRouter } from "vue-router";
+import { getHotelById, hotels, type Hotel } from "~/data/hotels";
 
-const { $auth, $db } = useNuxtApp();
+const { $auth, $db } = useNuxtApp() as any;
 const route = useRoute();
 const router = useRouter();
 
-const gallery = [
+const hotel = computed<Hotel | undefined>(() => {
+  const id = String(route.params.id || "");
+  return getHotelById(id) ?? hotels[0];
+});
+
+const galleries = [
   "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80",
   "https://images.unsplash.com/photo-1611892440504-42a792e24d32?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80",
@@ -17,14 +23,38 @@ const gallery = [
   "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=900&q=80",
 ];
 
-const amenities = [
-  { icon: "🏊", label: "Infinity Pool" },
-  { icon: "💆", label: "Holistic Spa" },
-  { icon: "🍽️", label: "Fine Dining" },
-  { icon: "🏋️", label: "Fitness Centre" },
-  { icon: "📶", label: "High-Speed Wi-Fi" },
-  { icon: "🛎️", label: "24/7 Room Service" },
-];
+const hotelGallery = computed(() => hotel.value?.gallery ?? galleries);
+
+const amenityIcons: Record<string, string> = {
+  "Infinity Pool": "🏊",
+  "Holistic Spa": "💆",
+  "Fine Dining": "🍽️",
+  "Fitness Centre": "🏋️",
+  "High-Speed Wi-Fi": "📶",
+  "24/7 Room Service": "🛎️",
+  "Temple View": "🕌",
+  "River View": "🌊",
+  "Rooftop Pool": "🏊",
+  "Private Beach": "🏖️",
+  "Sea View": "🌅",
+  "Garden View": "🌷",
+  "Swimming Pool": "🏊",
+  "Mountain View": "🏔️",
+  "Spa & Wellness": "💆",
+  "Eco Tours": "🌿",
+  "Water Sports": "🏄",
+  "Beach Access": "🏖️",
+  "Private Balcony": "🌆",
+  "Private Lounge": "🛋️",
+};
+
+const hotelAmenities = computed(() => {
+  const amenityList = hotel.value?.amenities ?? [];
+  return amenityList.map((label) => ({
+    icon: amenityIcons[label] ?? "✓",
+    label,
+  }));
+});
 
 const rooms = [
   {
@@ -194,13 +224,22 @@ async function submitBooking() {
   isBooking.value = true;
   bookingError.value = "";
 
+  if (!$auth || !$db) {
+    bookingError.value =
+      "Booking service is temporarily unavailable. Please try again.";
+    isBooking.value = false;
+    return;
+  }
+
   try {
     const user = $auth.currentUser ?? (await signInAnonymously($auth)).user;
-    const pricePerNight = Number(bookingRoom.value.price.replace("$", "").replace(",", ""));
+    const pricePerNight = Number(
+      bookingRoom.value.price.replace("$", "").replace(",", ""),
+    );
     const booking = await addDoc(collection($db, "bookings"), {
       userId: user.uid,
       hotelId: route.params.id,
-      hotelName: "The Azure Oasis Resort",
+      hotelName: hotel.value ? hotel.value.name : "SabayStay property",
       roomName: bookingRoom.value.title,
       checkIn: checkIn.value,
       checkOut: checkOut.value,
@@ -240,17 +279,21 @@ async function submitBooking() {
 }
 
 const heroImage = computed(
-  () => gallery[0] || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=80",
+  () =>
+    hotel.value?.heroImage ||
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1800&q=80",
 );
 </script>
 
 <template>
   <div class="min-h-screen bg-[#f7f6f2] text-[#1d2f52]">
     <!-- Hero Section -->
-    <section class="relative h-[70vh] min-h-[520px] overflow-hidden md:h-[75vh]">
+    <section
+      class="relative h-[70vh] min-h-[520px] overflow-hidden md:h-[75vh]"
+    >
       <img
         :src="heroImage"
-        alt="The Azure Oasis Resort"
+        :alt="hotel?.name"
         class="absolute inset-0 h-full w-full object-cover"
       />
       <div
@@ -270,26 +313,28 @@ const heroImage = computed(
           <p
             class="mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-amber-200"
           >
-            Luxury Resort · Cambodia
+            {{ hotel?.tagline }}
           </p>
           <h1
             class="sabay-display mt-4 text-5xl font-black leading-[0.95] tracking-[-0.05em] md:text-7xl"
           >
-            The Azure Oasis Resort
+            {{ hotel?.name }}
           </h1>
           <div
             class="mt-6 flex flex-wrap items-center gap-4 text-sm md:text-base"
           >
             <span class="flex items-center gap-1.5">
               <span class="text-[#f7b500]" aria-hidden="true">★★★★★</span>
-              <span class="font-semibold">4.8</span>
+              <span class="font-semibold">{{ hotel?.rating }}</span>
               <span class="text-white/60">(245 Reviews)</span>
             </span>
             <span class="text-white/30">|</span>
-            <span class="flex items-center gap-1.5 text-white/80">
-              <span aria-hidden="true">📍</span>
-              <span>123 Coastal Highway, Emerald Bay, Bivera</span>
-            </span>
+          <span
+            class="flex items-center gap-1.5 text-white/80"
+          >
+            <span aria-hidden="true">📍</span>
+            <span>{{ hotel?.address }}</span>
+          </span>
           </div>
         </div>
       </div>
@@ -300,7 +345,7 @@ const heroImage = computed(
       <div class="mx-auto max-w-7xl px-5 py-6 md:px-10">
         <div class="grid grid-cols-2 gap-3 md:grid-cols-5">
           <button
-            v-for="(image, index) in gallery.slice(1, 6)"
+            v-for="(image, index) in hotelGallery.slice(1, 6)"
             :key="index"
             type="button"
             class="group relative overflow-hidden rounded-xl"
@@ -321,16 +366,16 @@ const heroImage = computed(
             @click="openGallery(0)"
           >
             <img
-              :src="gallery[0]"
+              :src="hotelGallery[0]"
               alt="Main view"
               class="h-24 w-full object-cover md:h-32"
             />
             <div
               class="absolute inset-0 flex items-center justify-center bg-[#0d224a]/50"
             >
-              <span
-                class="text-sm font-semibold text-white md:text-base"
-              >View All Photos</span>
+              <span class="text-sm font-semibold text-white md:text-base"
+                >View All Photos</span
+              >
             </div>
           </button>
         </div>
@@ -343,7 +388,9 @@ const heroImage = computed(
         <!-- Left Column -->
         <div>
           <!-- About Section -->
-          <section class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200 md:p-10">
+          <section
+            class="rounded-2xl bg-white p-7 shadow-sm ring-1 ring-slate-200 md:p-10"
+          >
             <p
               class="text-xs font-semibold uppercase tracking-[0.2em] text-[#087d72]"
             >
@@ -355,17 +402,7 @@ const heroImage = computed(
               Where luxury meets nature
             </h2>
             <p class="mt-5 text-base leading-8 text-[#4a5871] md:text-lg">
-              Experience unparalleled luxury at The Azure Oasis Resort, where
-              minimalist design meets the lush vibrancy of the tropics. Nestled on
-              a pristine stretch of private coastline, our sanctuary offers a
-              seamless blend of indoor and outdoor living, designed for the
-              discerning traveler seeking deep relaxation and refined elegance.
-            </p>
-            <p class="mt-5 text-base leading-8 text-[#4a5871] md:text-lg">
-              Every detail, from the ambient lighting in our expansive suites to
-              the locally sourced ingredients in our restaurant, has been
-              thoughtfully curated to create an effortless experience that feels
-              both restorative and unforgettable.
+              {{ hotel?.description }}
             </p>
 
             <!-- Amenities Grid -->
@@ -377,11 +414,13 @@ const heroImage = computed(
               </h3>
               <div class="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3">
                 <div
-                  v-for="item in amenities"
+                  v-for="item in hotelAmenities"
                   :key="item.label"
                   class="flex items-center gap-3 rounded-xl border border-slate-200 bg-[#f9fafb] p-4 transition hover:border-[#087d72] hover:bg-[#e5f0ed]"
                 >
-                  <span class="text-2xl" aria-hidden="true">{{ item.icon }}</span>
+                  <span class="text-2xl" aria-hidden="true">{{
+                    item.icon
+                  }}</span>
                   <span class="text-sm font-medium text-[#1d2f52]">{{
                     item.label
                   }}</span>
@@ -421,7 +460,9 @@ const heroImage = computed(
                     class="absolute inset-0 bg-gradient-to-t from-[#07162b]/60 to-transparent"
                   />
                   <div class="absolute inset-x-0 bottom-0 p-5">
-                    <div class="flex items-end justify-between gap-3 text-white">
+                    <div
+                      class="flex items-end justify-between gap-3 text-white"
+                    >
                       <h3
                         class="sabay-display text-2xl font-black leading-tight md:text-3xl"
                       >
@@ -431,7 +472,9 @@ const heroImage = computed(
                         <p class="text-2xl font-bold md:text-3xl">
                           {{ room.price }}
                         </p>
-                        <p class="text-[10px] uppercase tracking-[0.15em] text-white/70">
+                        <p
+                          class="text-[10px] uppercase tracking-[0.15em] text-white/70"
+                        >
                           per night
                         </p>
                       </div>
@@ -505,7 +548,9 @@ const heroImage = computed(
                 class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
               >
                 <div class="flex items-center gap-0.5 text-[#f7b500]">
-                  <span v-for="n in review.rating" :key="n" aria-hidden="true">★</span>
+                  <span v-for="n in review.rating" :key="n" aria-hidden="true"
+                    >★</span
+                  >
                 </div>
                 <p class="mt-4 text-sm leading-7 text-[#324259]">
                   "{{ review.text }}"
@@ -540,10 +585,14 @@ const heroImage = computed(
                 <p class="text-xs uppercase tracking-[0.18em] text-slate-500">
                   Price from
                 </p>
-                <p class="sabay-display mt-2 text-4xl font-black text-[#1d2f52]">
-                  $450
+                <p
+                  class="sabay-display mt-2 text-4xl font-black text-[#1d2f52]"
+                >
+                  ${{ hotel?.price }}
                 </p>
-                <p class="text-[10px] uppercase tracking-[0.15em] text-slate-400">
+                <p
+                  class="text-[10px] uppercase tracking-[0.15em] text-slate-400"
+                >
                   / night
                 </p>
               </div>
@@ -557,13 +606,17 @@ const heroImage = computed(
 
             <div class="mt-6 space-y-3">
               <div class="rounded-xl border border-slate-200 bg-white p-4">
-                <p class="text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                <p
+                  class="text-[10px] uppercase tracking-[0.18em] text-slate-400"
+                >
                   Check-in / Check-out
                 </p>
                 <p class="mt-2 font-medium text-[#1d2f52]">Select Dates</p>
               </div>
               <div class="rounded-xl border border-slate-200 bg-white p-4">
-                <p class="text-[10px] uppercase tracking-[0.18em] text-slate-400">
+                <p
+                  class="text-[10px] uppercase tracking-[0.18em] text-slate-400"
+                >
                   Guests
                 </p>
                 <p class="mt-2 font-medium text-[#1d2f52]">
@@ -640,13 +693,15 @@ const heroImage = computed(
       </button>
 
       <img
-        :src="gallery[activeGalleryIndex]"
+        :src="hotelGallery[activeGalleryIndex]"
         alt="Resort gallery"
         class="max-h-[85vh] max-w-full rounded-2xl object-contain"
       />
 
-      <div class="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white backdrop-blur-sm">
-        {{ activeGalleryIndex + 1 }} / {{ gallery.length }}
+      <div
+        class="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white/10 px-4 py-2 text-sm text-white backdrop-blur-sm"
+      >
+        {{ activeGalleryIndex + 1 }} / {{ hotelGallery.length }}
       </div>
     </div>
 
@@ -679,9 +734,7 @@ const heroImage = computed(
           <p class="text-xs uppercase tracking-[0.2em] text-[#087d72]">
             Room details
           </p>
-          <h2
-            class="sabay-display mt-3 text-4xl font-black text-[#1d2f52]"
-          >
+          <h2 class="sabay-display mt-3 text-4xl font-black text-[#1d2f52]">
             {{ selectedRoom.title }}
           </h2>
           <p class="mt-4 text-base leading-7 text-[#4b5871]">
@@ -734,9 +787,7 @@ const heroImage = computed(
             <p class="text-xs uppercase tracking-[0.2em] text-[#087d72]">
               Reserve your room
             </p>
-            <h2
-              class="sabay-display mt-2 text-4xl font-black text-[#1d2f52]"
-            >
+            <h2 class="sabay-display mt-2 text-4xl font-black text-[#1d2f52]">
               {{ bookingRoom.title }}
             </h2>
           </div>

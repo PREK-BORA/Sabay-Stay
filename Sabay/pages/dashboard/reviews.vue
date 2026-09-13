@@ -40,7 +40,10 @@ function submitReview() {
   if (!reviewText.value.trim()) return;
 
   const review: Review = {
-    id: crypto.randomUUID(),
+    id:
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `rev-${Date.now()}`,
     property: "The Azure Retreat",
     text: reviewText.value.trim(),
     rating: rating.value,
@@ -69,7 +72,9 @@ function submitReview() {
       </p>
     </div>
 
-    <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
+    <section
+      class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8"
+    >
       <h2 class="text-lg font-bold text-[#0d224a]">
         Write a review for The Azure Retreat
       </h2>
@@ -125,8 +130,13 @@ function submitReview() {
 
     <section class="space-y-4">
       <h2 class="text-lg font-bold text-[#0d224a]">Your Reviews</h2>
-      <div v-if="reviews.length === 0" class="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200">
-        <p class="text-sm text-[#53637c]">You haven't submitted any reviews yet.</p>
+      <div
+        v-if="reviews.length === 0"
+        class="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200"
+      >
+        <p class="text-sm text-[#53637c]">
+          You haven't submitted any reviews yet.
+        </p>
       </div>
       <article
         v-for="review in reviews"

@@ -1,19 +1,26 @@
 import { computed, onMounted, ref } from "vue";
 
-interface StoredUser {
+export interface StoredUser {
   name: string;
   email: string;
   password?: string;
+  phone?: string;
+  country?: string;
+  photo?: string;
 }
 
 const currentUser = ref<StoredUser | null>(null);
 
 export function useAuth() {
   onMounted(() => {
-    if (currentUser.value) return;
+    if (currentUser.value || !import.meta.client) return;
 
-    const savedUser = localStorage.getItem("sabaystay-user");
-    currentUser.value = savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem("sabaystay-user");
+      currentUser.value = savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      currentUser.value = null;
+    }
   });
 
   return {
@@ -21,11 +28,16 @@ export function useAuth() {
     isAuthenticated: computed(() => Boolean(currentUser.value)),
     updateUser(user: StoredUser) {
       currentUser.value = user;
-      localStorage.setItem("sabaystay-user", JSON.stringify(user));
+      if (import.meta.client) {
+        localStorage.setItem("sabaystay-user", JSON.stringify(user));
+      }
     },
     logout() {
       currentUser.value = null;
-      localStorage.removeItem("sabaystay-authenticated");
+      if (import.meta.client) {
+        localStorage.removeItem("sabaystay-authenticated");
+        localStorage.removeItem("sabaystay-user");
+      }
     },
   };
 }

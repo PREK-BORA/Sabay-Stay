@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+import { doc, getDoc } from "firebase/firestore";
 import { useAuth } from "~/composables/useAuth";
+import { getHotelById } from "~/data/hotels";
 
 interface BookingDetails {
   property: string;
@@ -25,30 +27,33 @@ interface BookingDetails {
 
 definePageMeta({ layout: "user", middleware: "auth" });
 
+const { $auth, $db } = useNuxtApp() as any;
 const route = useRoute();
 const router = useRouter();
 const { user } = useAuth();
 const bookingId = computed(() => String(route.params.id));
+const isLoading = ref(true);
+const bookingError = ref("");
+
 const booking = ref<BookingDetails>({
-  property: "The Azure Oasis Resort",
-  location: "Emerald Bay, Bivera",
+  property: "",
+  location: "",
   status: "Confirmed",
-  image:
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1200&q=80",
-  rating: "4.8 / 5",
-  roomType: "Oceanfront Suite",
-  guests: 2,
-  facilities: ["Ocean view", "King bed", "Breakfast included", "Wi-Fi"],
-  checkIn: "October 12, 2026",
-  checkOut: "October 18, 2026",
-  nights: 6,
-  roomPrice: 4200,
-  taxes: 150,
-  discount: 100,
-  specialRequests: "Late check-in requested after 10 PM",
+  image: "",
+  rating: "",
+  roomType: "",
+  guests: 1,
+  facilities: [],
+  checkIn: "",
+  checkOut: "",
+  nights: 0,
+  roomPrice: 0,
+  taxes: 0,
+  discount: 0,
+  specialRequests: "",
   cancellationPolicy: "Free cancellation up to 48 hours before check-in",
-  paymentMethod: "Visa ending in 4242",
-  bookingDate: "September 28, 2026",
+  paymentMethod: "",
+  bookingDate: "",
 });
 
 const guestName = computed(() => user.value?.name || "Guest traveler");
@@ -57,7 +62,7 @@ const guestPhone = computed(() => user.value?.phone || "Not provided");
 const total = computed(
   () => booking.value.roomPrice + booking.value.taxes - booking.value.discount,
 );
-const displayStatus = computed(() => {
+const displayStatus = computed<BookingDetails["status"]>(() => {
   const cancelledIds = getCancelledBookingIds();
   if (cancelledIds.includes(bookingId.value)) return "Cancelled";
   return booking.value.status;
@@ -75,6 +80,65 @@ function getCancelledBookingIds(): string[] {
 function setCancelledBookingIds(ids: string[]) {
   localStorage.setItem("sabaystay-cancelled-bookings", JSON.stringify(ids));
 }
+
+async function loadBooking() {
+  if (!$db) {
+    isLoading.value = false;
+    return;
+  }
+
+  try {
+    const docSnap = await getDoc(doc($db, "bookings", bookingId.value));
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      const hotel = getHotelById(String(data.hotelId || ""));
+      const nights = Number(data.nights || 0);
+      const roomPrice = Number(data.pricePerNight || 0) * nights;
+
+      booking.value = {
+        property: String(data.hotelName || hotel?.name || "SabayStay property"),
+        location: hotel ? `${hotel.location}` : "",
+        status: (String(data.status || "pending").charAt(0).toUpperCase() +
+          String(data.status || "pending").slice(1)) as BookingDetails["status"],
+        image: hotel?.heroImage || "",
+        rating: hotel ? `${hotel.rating} / 5` : "",
+        roomType: String(data.roomName || "Room"),
+        guests: Number(data.guests || 1),
+        facilities: hotel
+          ? hotel.amenities
+          : ["Ocean view", "King bed", "Breakfast included", "Wi-Fi"],
+        checkIn: String(data.checkIn || ""),
+        checkOut: String(data.checkOut || ""),
+        nights,
+        roomPrice,
+        taxes: Number(data.taxes || 0),
+        discount: Number(data.discount || 0),
+        specialRequests: String(data.specialRequests || ""),
+        cancellationPolicy:
+          "Free cancellation up to 48 hours before check-in",
+        paymentMethod: String(data.paymentMethod || ""),
+        bookingDate: data.createdAt
+          ? new Date(data.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+          : "",
+      };
+    } else {
+      bookingError.value = "Booking not found.";
+    }
+  } catch (error) {
+    console.error("Failed to load booking", error);
+    bookingError.value = "Your booking could not be loaded.";
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+onMounted(() => {
+  void loadBooking();
+});
 
 function cancelBooking() {
   booking.value.status = "Cancelled";
@@ -124,6 +188,13 @@ const statusConfig = {
 
 <template>
   <div class="mx-auto max-w-5xl space-y-6">
+    <div v-if="isLoading" class="text-sm text-[#65728a]">
+      Loading booking details...
+    </div>
+    <div v-else-if="bookingError" class="text-sm text-red-600">
+      {{ bookingError }}
+    </div>
+    <template v-else>
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
         <NuxtLink
@@ -145,7 +216,9 @@ const statusConfig = {
       </span>
     </div>
 
-    <section class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200">
+    <section
+      class="overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-slate-200"
+    >
       <div class="grid md:grid-cols-[300px_1fr]">
         <div class="relative h-64 md:h-full">
           <img
@@ -153,7 +226,9 @@ const statusConfig = {
             :alt="booking.property"
             class="h-full w-full object-cover"
           />
-          <div class="absolute inset-0 bg-gradient-to-t from-[#07182b]/40 to-transparent md:bg-gradient-to-r" />
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-[#07182b]/40 to-transparent md:bg-gradient-to-r"
+          />
         </div>
         <div class="p-6 sm:p-8">
           <p
@@ -164,12 +239,16 @@ const statusConfig = {
           <h2 class="mt-2 text-3xl font-black text-[#0d224a]">
             {{ booking.property }}
           </h2>
-          <div class="mt-3 flex flex-wrap items-center gap-4 text-sm text-[#53637c]">
+          <div
+            class="mt-3 flex flex-wrap items-center gap-4 text-sm text-[#53637c]"
+          >
             <span class="flex items-center gap-1.5">
               <span aria-hidden="true">📍</span>
               {{ booking.location }}
             </span>
-            <span class="flex items-center gap-1.5 font-semibold text-amber-600">
+            <span
+              class="flex items-center gap-1.5 font-semibold text-amber-600"
+            >
               <span aria-hidden="true">★</span>
               {{ booking.rating }}
             </span>
@@ -241,13 +320,17 @@ const statusConfig = {
           <p class="mt-1 font-semibold text-[#1d2f52]">{{ guestName }}</p>
         </div>
         <div class="rounded-xl border border-slate-200 bg-[#f7f6f2] p-4">
-          <p class="text-xs uppercase tracking-[0.18em] text-[#65728a]">Email</p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#65728a]">
+            Email
+          </p>
           <p class="mt-1 break-all font-semibold text-[#1d2f52]">
             {{ guestEmail }}
           </p>
         </div>
         <div class="rounded-xl border border-slate-200 bg-[#f7f6f2] p-4">
-          <p class="text-xs uppercase tracking-[0.18em] text-[#65728a]">Phone</p>
+          <p class="text-xs uppercase tracking-[0.18em] text-[#65728a]">
+            Phone
+          </p>
           <p class="mt-1 font-semibold text-[#1d2f52]">{{ guestPhone }}</p>
         </div>
       </div>
@@ -295,7 +378,9 @@ const statusConfig = {
       <h2 class="text-lg font-bold text-[#0d224a]">Price Summary</h2>
       <dl class="mt-4 max-w-md space-y-3 text-sm">
         <div class="flex justify-between">
-          <dt class="text-[#65728a]">Room Price ({{ booking.nights }} nights)</dt>
+          <dt class="text-[#65728a]">
+            Room Price ({{ booking.nights }} nights)
+          </dt>
           <dd class="font-medium text-[#1d2f52]">
             ${{ booking.roomPrice.toLocaleString() }}
           </dd>
@@ -340,5 +425,6 @@ const statusConfig = {
         Download Confirmation
       </button>
     </div>
+    </template>
   </div>
 </template>

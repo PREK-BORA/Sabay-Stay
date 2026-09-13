@@ -1,58 +1,76 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRoute } from "#app";
-import { useRouter } from "vue-router";
 
 const route = useRoute();
-const router = useRouter();
+const selectedGuests = ref("2 adults, 0 children");
 
-const checkIn = ref("");
-const checkOut = ref("");
-const adults = ref(2);
-const children = ref(0);
-const isGuestsOpen = ref(false);
-const bookingError = ref("");
-
-const guestsLabel = computed(() => {
-  const adultText = `${adults.value} Adult${adults.value === 1 ? "" : "s"}`;
-  const childText = `${children.value} Child${children.value === 1 ? "" : "ren"}`;
-  return `${adultText}, ${childText}`;
-});
-
-function adjustGuests(type: "adult" | "child", delta: number) {
-  if (type === "adult") {
-    adults.value = Math.max(1, adults.value + delta);
-    return;
-  }
-
-  children.value = Math.max(0, children.value + delta);
+interface DestinationInfo {
+  country: string;
+  name: string;
+  tagline: string;
+  description: string;
+  image: string;
+  accent: string;
+  highlights: string[];
 }
 
-function checkAvailability() {
-  if (!checkIn.value || !checkOut.value) {
-    bookingError.value = "Please choose both dates.";
-    return;
-  }
-
-  if (checkOut.value <= checkIn.value) {
-    bookingError.value = "Check-out must be after check-in.";
-    return;
-  }
-
-  bookingError.value = "";
-  router.push({
-    path: "/hotels",
-    query: {
-      destination: String(route.params.slug),
-      checkIn: checkIn.value,
-      checkOut: checkOut.value,
-      adults: adults.value,
-      children: children.value,
-    },
-  });
-}
-
-const destinationDetails = {
+const destinationDetails: Record<string, DestinationInfo> = {
+  "koh-rong": {
+    country: "Cambodia",
+    name: "Koh Rong",
+    tagline: "Turquoise waters, untouched sands, and vibrant island life.",
+    description:
+      "A serene tropical escape where turquoise waters meet pristine white sands, peaceful bays, and unhurried days.",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfn2DaMzZdw2EOSNDIxV5DJkk6ky6i3VX42qaO89PsiA&s=10",
+    accent: "Coastal escape",
+    highlights: ["Bioluminescent plankton", "White sand beaches", "Island boat charters"],
+  },
+  "angkor-wat": {
+    country: "Cambodia",
+    name: "Angkor Wat",
+    tagline: "Ancient calm, thoughtfully reimagined.",
+    description:
+      "Move between sacred temples, quiet forest shrines, and timeless streets where ancient heritage tells an unforgettable story.",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS0g-_gfwa3HmXM_n-HlMgDdEoyhlLw9kj1qWb2RG3x1g&s=10",
+    accent: "Cultural escape",
+    highlights: ["Sunrise over Angkor", "Private temple tours", "Khmer fine dining"],
+  },
+  "koh-sdach": {
+    country: "Cambodia",
+    name: "Koh Sdach",
+    tagline: "Ultimate overwater serenity and quiet island days.",
+    description:
+      "Find pure stillness on the King Island archipelago with unspoiled marine life, fresh local seafood, and tranquil sea views.",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQnEu51DLvPSb_YK6TanBNh2MTOWmqowBc0vhUwVgxfXA&s=10",
+    accent: "Island escape",
+    highlights: ["Archipelago cruising", "Coral reef snorkeling", "Local fishing villages"],
+  },
+  "song-saa": {
+    country: "Cambodia",
+    name: "Song Saa",
+    tagline: "Eco-luxury amid vibrant biodiversity.",
+    description:
+      "A private sanctuary across twin islands blending sustainable luxury, overwater dining, and secluded coastal hideaways.",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSValg7gR1_INGa4FS6OZT3Mxpyuf4mE7TA9LmSDU0Mng&s=10",
+    accent: "Eco-luxury escape",
+    highlights: ["Private island villas", "Marine conservation tours", "Sunset spa rituals"],
+  },
+  "chiso-mountain": {
+    country: "Cambodia",
+    name: "Chiso Mountain",
+    tagline: "High-altitude quiet and historical wonder.",
+    description:
+      "Climb to ancient hilltop sanctuaries overlooking emerald rice fields and dramatic horizons of Takeo province.",
+    image:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQVSEUpnDttq4dCn9WvwRlERdoHe4r5siVyDTKoF8amEg&s=10",
+    accent: "Mountain escape",
+    highlights: ["Historical temple stairs", "Panoramic valley vistas", "Countryside heritage"],
+  },
   "amalfi-coast": {
     country: "Italy",
     name: "Amalfi Coast",
@@ -67,17 +85,6 @@ const destinationDetails = {
       "Mediterranean dining",
       "Private boat days",
     ],
-  },
-  kyoto: {
-    country: "Cambodia",
-    name: "Angkor Wat",
-    tagline: "Ancient calm, thoughtfully reimagined.",
-    description:
-      "Move between moss gardens, quiet tea houses, and timeless streets where every season tells a different story.",
-    image:
-      "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1800&q=85",
-    accent: "Cultural escape",
-    highlights: ["Temple mornings", "Seasonal cuisine", "Private tea rituals"],
   },
   "the-maldives": {
     country: "South Asia",
@@ -116,13 +123,32 @@ const destinationDetails = {
       "Fireside evenings",
     ],
   },
-} as const;
+};
 
-const destination = computed(() => {
-  const slug = String(route.params.slug);
+// Aliases for user-friendly slugs or spaces in route params
+destinationDetails["khos-rong"] = destinationDetails["koh-rong"];
+destinationDetails["khos rong"] = destinationDetails["koh-rong"];
+destinationDetails["koh rong"] = destinationDetails["koh-rong"];
+destinationDetails["kyoto"] = destinationDetails["angkor-wat"];
+destinationDetails["angkor wat"] = destinationDetails["angkor-wat"];
+destinationDetails["khos-sdach"] = destinationDetails["koh-sdach"];
+destinationDetails["khos sdach"] = destinationDetails["koh-sdach"];
+destinationDetails["koh sdach"] = destinationDetails["koh-sdach"];
+destinationDetails["khos-songsa"] = destinationDetails["song-saa"];
+destinationDetails["khos songsa"] = destinationDetails["song-saa"];
+destinationDetails["song saa"] = destinationDetails["song-saa"];
+destinationDetails["chiso mountain"] = destinationDetails["chiso-mountain"];
+
+const destination = computed<DestinationInfo>(() => {
+  const rawSlug = String(route.params.slug || "").trim();
+  const normalizedSlug = rawSlug.toLowerCase().replace(/\s+/g, "-");
+
   return (
-    destinationDetails[slug as keyof typeof destinationDetails] ??
-    destinationDetails["amalfi-coast"]
+    destinationDetails[normalizedSlug] ??
+    destinationDetails[rawSlug.toLowerCase()] ??
+    destinationDetails[rawSlug] ??
+    destinationDetails["koh-rong"] ??
+    destinationDetails["angkor-wat"]
   );
 });
 
@@ -133,7 +159,7 @@ const stays = [
     price: "$1,250",
     image:
       "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=900&q=85",
-    link: "/hotels/azure-retreat",
+    link: "/hotels/angkor-heritage-resort",
   },
   {
     name: "Emerald Canopy Resort",
@@ -141,46 +167,86 @@ const stays = [
     price: "$850",
     image:
       "https://images.unsplash.com/photo-1582610116397-edb318620f90?auto=format&fit=crop&w=900&q=85",
-    link: "/hotels/emerald-canopy",
+    link: "/hotels/mondulkiri-forest-sanctuary",
+  },
+  {
+    name: "Koh Rong Island Sanctuary",
+    detail: "Overwater villas · Private beach",
+    price: "$680",
+    image:
+      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=85",
+    link: "/hotels/koh-rong-island-resort",
+  },
+  {
+    name: "Royal Mekong Villa",
+    detail: "Heritage suites · River sunset",
+    price: "$450",
+    image:
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=900&q=85",
+    link: "/hotels/royal-mekong-hotel",
   },
 ];
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f7f6f2] text-[#1d2f52]">
-    <section class="relative min-h-[520px] overflow-hidden md:min-h-[640px]">
+  <div
+    class="min-h-screen bg-[#f8f7f4] font-sans text-[#1d2f52] selection:bg-amber-400 selection:text-slate-900"
+  >
+    <!-- Hero Section -->
+    <section
+      class="relative min-h-[75vh] w-full overflow-hidden flex items-end"
+    >
       <img
         :src="destination.image"
         :alt="destination.name"
-        class="absolute inset-0 h-full w-full object-cover"
+        class="absolute inset-0 h-full w-full object-cover scale-105 transform transition-transform duration-1000 ease-out"
+      />
+      <!-- Overlays -->
+      <div
+        class="absolute inset-0 bg-gradient-to-t from-[#07162b]/90 via-[#07162b]/50 to-black/30"
       />
       <div
-        class="absolute inset-0 bg-gradient-to-t from-[#07182b]/90 via-[#07182b]/30 to-[#07182b]/10"
+        class="absolute inset-0 bg-radial-at-c from-transparent via-black/20 to-black/60 pointer-events-none"
       />
+
       <div
-        class="relative mx-auto flex min-h-[520px] max-w-7xl items-end px-5 pb-12 md:min-h-[640px] md:px-10 md:pb-20"
+        class="relative z-10 mx-auto w-full max-w-7xl px-6 pb-16 pt-32 lg:px-12 lg:pb-24"
       >
-        <div class="max-w-3xl text-white">
+        <div class="max-w-3xl">
           <NuxtLink
             to="/destinations"
-            class="text-xs font-semibold uppercase tracking-[0.2em] text-white/75 hover:text-white"
-            >← All destinations</NuxtLink
+            class="group inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1.5 text-xs font-medium uppercase tracking-widest text-white backdrop-blur-md transition-all duration-300 hover:bg-white/25 hover:text-white"
           >
-          <p
-            class="mt-8 text-xs font-semibold uppercase tracking-[0.24em] text-amber-200"
-          >
-            {{ destination.country }} · {{ destination.accent }}
-          </p>
+            <span
+              class="transition-transform duration-300 group-hover:-translate-x-1"
+              >&larr;</span
+            >
+            All destinations
+          </NuxtLink>
+
+          <div class="mt-6 flex items-center gap-3">
+            <span class="h-px w-8 bg-amber-400"></span>
+            <p
+              class="text-xs font-bold uppercase tracking-[0.3em] text-amber-300"
+            >
+              {{ destination.country }} &bull; {{ destination.accent }}
+            </p>
+          </div>
+
           <h1
-            class="sabay-display mt-4 text-6xl font-black leading-[0.95] tracking-[-0.05em] md:text-8xl"
+            class="mt-3 text-5xl font-extrabold tracking-tight text-white sm:text-7xl lg:text-8xl"
           >
             {{ destination.name }}
           </h1>
-          <p class="mt-5 text-xl font-medium text-white/90 md:text-2xl">
+
+          <p
+            class="mt-6 text-xl font-light leading-relaxed text-slate-200 sm:text-2xl"
+          >
             {{ destination.tagline }}
           </p>
+
           <p
-            class="mt-4 max-w-2xl text-sm leading-7 text-white/75 md:text-base"
+            class="mt-4 max-w-2xl text-base text-slate-200/90 leading-relaxed font-normal"
           >
             {{ destination.description }}
           </p>
@@ -188,171 +254,132 @@ const stays = [
       </div>
     </section>
 
-    <main class="mx-auto max-w-7xl px-5 py-12 md:px-10 md:py-16">
-      <section class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <div class="bg-white p-7 shadow-sm ring-1 ring-slate-200 md:p-10">
-          <p
-            class="text-xs font-semibold uppercase tracking-[0.2em] text-[#087d72]"
-          >
-            The feeling of this place
-          </p>
-          <h2
-            class="mt-3 text-3xl font-bold tracking-tight text-[#0d224a] md:text-4xl"
-          >
-            A destination with its own rhythm.
-          </h2>
-          <p class="mt-5 text-base leading-8 text-[#53637c]">
-            The best journeys leave room for discovery. Let your mornings unfold
-            slowly, follow a local recommendation for lunch, and leave the
-            afternoon open for whatever catches your eye.
-          </p>
-          <NuxtLink
-            to="/experiences"
-            class="mt-7 inline-flex items-center bg-[#0d224a] px-5 py-3 text-sm font-semibold text-white hover:bg-[#087d72]"
-            >Explore experiences
-            <span class="ml-2" aria-hidden="true">-&gt;</span></NuxtLink
-          >
-        </div>
-        <div class="bg-[#e5f0ed] p-7 md:p-10">
-          <p
-            class="text-xs font-semibold uppercase tracking-[0.2em] text-[#087d72]"
-          >
-            Make the most of it
-          </p>
-          <ul class="mt-6 divide-y divide-[#c8ddd7]">
-            <li
-              v-for="(highlight, index) in destination.highlights"
-              :key="highlight"
-              class="flex items-center gap-4 py-4 first:pt-0 last:pb-0"
+    <!-- Main Content Grid -->
+    <main class="relative z-20 mx-auto max-w-7xl px-6 py-12 lg:px-12 lg:py-20">
+      <section class="grid gap-8 lg:grid-cols-12 lg:items-start">
+        <!-- Left Panel: Context -->
+        <div
+          class="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-8 shadow-sm ring-1 ring-slate-200/60 lg:col-span-7 lg:p-12"
+        >
+          <div>
+            <span
+              class="text-xs font-bold uppercase tracking-[0.25em] text-[#087d72]"
+              >The Experience</span
             >
-              <span class="text-sm font-bold text-[#087d72]"
-                >0{{ index + 1 }}</span
-              >
-              <span class="text-sm font-semibold text-[#0d224a]">{{
-                highlight
-              }}</span>
-            </li>
-          </ul>
+            <h2
+              class="sabay-display mt-3 text-3xl font-bold tracking-tight text-[#07166b] sm:text-4xl"
+            >
+              A destination with its own rhythm.
+            </h2>
+            <p class="mt-6 text-base leading-relaxed text-[#4b5871]">
+              The best journeys leave room for discovery. Let your mornings
+              unfold slowly, follow a local recommendation for lunch, and leave
+              the afternoon open for whatever catches your eye.
+            </p>
+          </div>
 
+          <div class="mt-10">
+            <NuxtLink
+              to="/experiences"
+              class="group inline-flex items-center gap-3 rounded-xl bg-[#07166b] px-6 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#0d278a] hover:shadow-lg"
+            >
+              <span>Explore experiences</span>
+              <span
+                class="transition-transform duration-300 group-hover:translate-x-1"
+                >&rarr;</span
+              >
+            </NuxtLink>
+          </div>
+        </div>
+
+        <!-- Right Panel: Highlights & Booking Card -->
+        <div class="space-y-8 lg:col-span-5">
+          <!-- Highlights Box -->
           <div
-            class="mt-8 rounded-[1.5rem] bg-white p-5 shadow-sm ring-1 ring-slate-200"
+            class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm ring-1 ring-slate-200/60"
+          >
+            <span
+              class="text-xs font-bold uppercase tracking-[0.25em] text-[#087d72]"
+              >Highlights</span
+            >
+            <ul class="mt-6 space-y-4">
+              <li
+                v-for="(highlight, index) in destination.highlights"
+                :key="highlight"
+                class="flex items-center gap-4 rounded-xl border border-slate-100 bg-[#f9fafb] p-3.5 transition-colors duration-300 hover:border-slate-200 hover:bg-[#f3f4f6]"
+              >
+                <span
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#e5f0ed] text-xs font-bold text-[#087d72]"
+                >
+                  0{{ index + 1 }}
+                </span>
+                <span class="text-sm font-semibold text-[#1d2f52]">{{
+                  highlight
+                }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Quick Booking Card -->
+          <div
+            class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm ring-1 ring-slate-200/60"
           >
             <div
-              class="flex items-center justify-between gap-3 rounded-[1rem] border border-slate-200 bg-[#f5f7fa] p-4"
+              class="flex items-center justify-between border-b border-slate-100 pb-5"
             >
               <div>
-                <p class="text-xs uppercase tracking-[0.2em] text-slate-500">
-                  Price from
+                <p
+                  class="text-[10px] font-bold uppercase tracking-widest text-[#65728a]"
+                >
+                  Price starting from
                 </p>
-                <p class="mt-3 text-4xl font-black text-[#1d2f52]">$450</p>
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">
-                  / night
+                <p
+                  class="sabay-display mt-1 text-4xl font-extrabold tracking-tight text-[#07166b]"
+                >
+                  $450
+                  <span class="text-xs font-normal text-[#65728a]"
+                    >/ night</span
+                  >
                 </p>
               </div>
               <div
-                class="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#eaf1fb] text-xl"
-                aria-hidden="true"
+                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf1fb] text-2xl"
               >
                 🛏️
               </div>
             </div>
 
-            <div class="mt-5 space-y-3 text-sm text-[#3b4a62]">
-              <div class="rounded-xl border border-slate-200 bg-white p-3">
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">
+            <div class="mt-5 space-y-3">
+              <div
+                class="rounded-xl border border-slate-200 bg-[#f9fafb] p-3.5 transition-colors hover:border-slate-300"
+              >
+                <p
+                  class="text-[10px] font-bold uppercase tracking-wider text-[#65728a]"
+                >
                   Check-in / Check-out
                 </p>
-                <div class="mt-2 grid grid-cols-2 gap-2">
-                  <label class="flex flex-col text-left">
-                    <span class="text-[10px] uppercase tracking-widest text-slate-400">Check-in</span>
-                    <input
-                      v-model="checkIn"
-                      type="date"
-                      class="mt-1 bg-transparent text-sm font-medium text-[#1d2f52] outline-none"
-                    />
-                  </label>
-                  <label class="flex flex-col text-left">
-                    <span class="text-[10px] uppercase tracking-widest text-slate-400">Check-out</span>
-                    <input
-                      v-model="checkOut"
-                      type="date"
-                      class="mt-1 bg-transparent text-sm font-medium text-[#1d2f52] outline-none"
-                    />
-                  </label>
-                </div>
+                <p class="mt-1 text-sm font-semibold text-[#1d2f52]">
+                  Select Travel Dates
+                </p>
               </div>
-              <div class="relative rounded-xl border border-slate-200 bg-white p-3">
-                <p class="text-xs uppercase tracking-[0.18em] text-slate-400">
+
+              <div
+                class="rounded-xl border border-slate-200 bg-[#f9fafb] p-3.5 transition-colors hover:border-slate-300"
+              >
+                <p
+                  class="text-[10px] font-bold uppercase tracking-wider text-[#65728a]"
+                >
                   Guests
                 </p>
-                <button
-                  type="button"
-                  class="mt-2 flex w-full items-center justify-between text-left font-medium text-[#1d2f52]"
-                  @click="isGuestsOpen = !isGuestsOpen"
-                >
-                  {{ guestsLabel }}
-                  <span aria-hidden="true">{{ isGuestsOpen ? "▲" : "▼" }}</span>
-                </button>
-                <div
-                  v-if="isGuestsOpen"
-                  class="absolute left-0 right-0 top-full z-20 mt-1 rounded-xl border border-slate-200 bg-white p-3 shadow-lg"
-                >
-                  <div
-                    class="flex items-center justify-between gap-4 py-2 text-[#1d2f52]"
-                  >
-                    <span class="text-sm">Adults</span>
-                    <div class="flex items-center gap-3">
-                      <button
-                        type="button"
-                        class="flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-lg text-[#1d2f52] hover:bg-slate-100"
-                        @click.stop="adjustGuests('adult', -1)"
-                      >
-                        −
-                      </button>
-                      <span class="min-w-4 text-center text-sm">{{ adults }}</span>
-                      <button
-                        type="button"
-                        class="flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-lg text-[#1d2f52] hover:bg-slate-100"
-                        @click.stop="adjustGuests('adult', 1)"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                  <div
-                    class="mt-2 flex items-center justify-between gap-4 py-2 text-[#1d2f52]"
-                  >
-                    <span class="text-sm">Children</span>
-                    <div class="flex items-center gap-3">
-                      <button
-                        type="button"
-                        class="flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-lg text-[#1d2f52] hover:bg-slate-100"
-                        @click.stop="adjustGuests('child', -1)"
-                      >
-                        −
-                      </button>
-                      <span class="min-w-4 text-center text-sm">{{ children }}</span>
-                      <button
-                        type="button"
-                        class="flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-lg text-[#1d2f52] hover:bg-slate-100"
-                        @click.stop="adjustGuests('child', 1)"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <p class="mt-1 text-sm font-semibold text-[#1d2f52]">
+                  {{ selectedGuests }}
+                </p>
               </div>
             </div>
 
-            <p v-if="bookingError" class="mt-3 text-sm text-red-600" role="alert">
-              {{ bookingError }}
-            </p>
-
             <NuxtLink
               to="/hotels"
-              class="mt-5 flex w-full items-center justify-center rounded-xl bg-[#0d224a] px-4 py-4 text-base font-semibold text-white hover:bg-[#0a1d3d]"
-              @click.prevent="checkAvailability"
+              class="mt-6 flex w-full items-center justify-center rounded-xl bg-[#07166b] px-6 py-4 text-sm font-bold text-white transition-all duration-300 hover:bg-[#0d278a] hover:shadow-lg"
             >
               Check Availability
             </NuxtLink>
@@ -360,85 +387,113 @@ const stays = [
         </div>
       </section>
 
-      <section class="mt-16">
+      <!-- Accommodations Section -->
+      <section class="mt-24">
         <div
-          class="flex items-end justify-between gap-5 border-b border-slate-200 pb-5"
+          class="flex items-end justify-between border-b border-slate-200 pb-6"
         >
           <div>
-            <p
-              class="text-xs font-semibold uppercase tracking-[0.2em] text-[#087d72]"
+            <span
+              class="text-xs font-bold uppercase tracking-[0.25em] text-[#087d72]"
+              >Accommodations</span
             >
-              Where to stay
-            </p>
-            <h2 class="mt-2 text-3xl font-bold tracking-tight text-[#0d224a]">
+            <h2
+              class="sabay-display mt-2 text-3xl font-bold tracking-tight text-[#07166b] sm:text-4xl"
+            >
               A beautiful base for your journey
             </h2>
           </div>
           <NuxtLink
             to="/hotels"
-            class="hidden text-sm font-semibold text-[#0d224a] hover:text-[#087d72] sm:block"
-            >View all stays →</NuxtLink
+            class="hidden text-sm font-semibold text-[#07166b] transition-colors hover:underline sm:block"
           >
+            View all stays &rarr;
+          </NuxtLink>
         </div>
-        <div class="mt-7 grid gap-6 md:grid-cols-2">
+
+        <div class="mt-8 grid gap-8 md:grid-cols-2">
           <article
             v-for="stay in stays"
             :key="stay.name"
-            class="group overflow-hidden bg-white shadow-sm ring-1 ring-slate-200"
+            class="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm ring-1 ring-slate-200/60 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-xl"
           >
-            <div class="grid md:grid-cols-[0.9fr_1.1fr]">
-              <div class="h-56 overflow-hidden md:h-full">
+            <div class="flex flex-col h-full sm:flex-row">
+              <div
+                class="relative h-60 w-full overflow-hidden sm:h-auto sm:w-1/2"
+              >
                 <img
                   :src="stay.image"
                   :alt="stay.name"
-                  class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  class="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
                 />
               </div>
-              <div class="p-6">
-                <p class="text-xs text-[#718096]">{{ stay.detail }}</p>
-                <h3 class="mt-2 text-2xl font-bold text-[#0d224a]">
-                  {{ stay.name }}
-                </h3>
-                <p
-                  class="mt-5 text-xs uppercase tracking-[0.14em] text-[#718096]"
-                >
-                  From
-                </p>
-                <p class="mt-1 text-2xl font-bold text-[#087d72]">
-                  {{ stay.price }}
-                  <span class="text-xs font-normal text-[#718096]"
-                    >/ night</span
+
+              <div class="flex flex-col justify-between p-6 sm:w-1/2">
+                <div>
+                  <p class="text-xs font-medium text-[#65728a]">
+                    {{ stay.detail }}
+                  </p>
+                  <h3
+                    class="sabay-display mt-2 text-xl font-bold text-[#07166b] transition-colors group-hover:text-[#087d72]"
                   >
-                </p>
-                <NuxtLink
-                  :to="stay.link"
-                  class="mt-5 inline-flex text-sm font-semibold text-[#0d224a] hover:text-[#087d72]"
-                  >View property <span class="ml-2">-&gt;</span></NuxtLink
-                >
+                    {{ stay.name }}
+                  </h3>
+                </div>
+
+                <div class="mt-6">
+                  <p
+                    class="text-[10px] font-bold uppercase tracking-wider text-[#65728a]"
+                  >
+                    From
+                  </p>
+                  <p class="sabay-display text-2xl font-bold text-[#07166b]">
+                    {{ stay.price }}
+                    <span class="text-xs font-normal text-[#65728a]"
+                      >/ night</span
+                    >
+                  </p>
+                  <NuxtLink
+                    :to="stay.link"
+                    class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#087d72] transition-colors hover:text-[#07166b]"
+                  >
+                    View property <span>&rarr;</span>
+                  </NuxtLink>
+                </div>
               </div>
             </div>
           </article>
         </div>
       </section>
 
+      <!-- CTA Banner -->
       <section
-        class="mt-16 bg-[#0d224a] px-7 py-10 text-center text-white md:px-10 md:py-14"
+        class="relative mt-24 overflow-hidden rounded-3xl bg-[#07166b] p-10 text-center text-white sm:p-16"
       >
-        <p
-          class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200"
-        >
-          Your next chapter
-        </p>
-        <h2 class="mt-3 text-3xl font-bold">Ready to see it for yourself?</h2>
-        <p class="mx-auto mt-3 max-w-xl text-sm leading-6 text-white/75">
-          Browse our stays and start shaping a journey that feels entirely
-          yours.
-        </p>
-        <NuxtLink
-          to="/hotels"
-          class="mt-6 inline-flex bg-amber-500 px-5 py-3 text-sm font-bold text-[#18253d] hover:bg-amber-400"
-          >Find a stay</NuxtLink
-        >
+        <div
+          class="absolute -bottom-24 -right-12 h-64 w-64 rounded-full border-[32px] border-white/10"
+          aria-hidden="true"
+        />
+        <div class="relative z-10 mx-auto max-w-2xl">
+          <span
+            class="text-xs font-bold uppercase tracking-[0.25em] text-amber-300"
+            >Your Next Chapter</span
+          >
+          <h2
+            class="sabay-display mt-3 text-3xl font-extrabold tracking-tight text-white sm:text-4xl"
+          >
+            Ready to see it for yourself?
+          </h2>
+          <p class="mt-4 text-base leading-relaxed text-slate-200">
+            Browse our curated stays and start shaping a journey that feels
+            entirely yours.
+          </p>
+          <NuxtLink
+            to="/hotels"
+            class="mt-8 inline-flex items-center rounded-xl bg-amber-400 px-8 py-4 text-sm font-bold text-[#07166b] transition-all duration-300 hover:bg-amber-300 hover:shadow-lg hover:shadow-amber-400/20"
+          >
+            Find a stay
+          </NuxtLink>
+        </div>
       </section>
     </main>
   </div>

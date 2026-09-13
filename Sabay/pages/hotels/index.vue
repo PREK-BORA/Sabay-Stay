@@ -1,63 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-
-type Hotel = {
-  id: string;
-  name: string;
-  location: string;
-  price: number;
-  rating: number;
-  image: string;
-  badge?: string;
-  amenities: string[];
-};
+import { hotels, type Hotel } from "~/data/hotels";
 
 const { favorites, isFavorite, toggleFavorite } = useFavorites();
-
-const hotels: Hotel[] = [
-  {
-    id: "azure-retreat",
-    name: "The Azure Retreat",
-    location: "Maldives",
-    price: 1250,
-    rating: 4.9,
-    badge: "Premium",
-    amenities: ["Infinity Pool", "Private Villa"],
-    image:
-      "https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: "emerald-canopy",
-    name: "Emerald Canopy Resort",
-    location: "Ubud, Bali",
-    price: 850,
-    rating: 4.8,
-    amenities: ["Spa & Wellness", "Jungle View"],
-    image:
-      "https://images.unsplash.com/photo-1582610116397-edb318620f90?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: "cliffside-sanctuary",
-    name: "Cliffside Sanctuary",
-    location: "Santorini, Greece",
-    price: 1800,
-    rating: 5,
-    badge: "Premium",
-    amenities: ["Private Beach", "Ocean View"],
-    image:
-      "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?auto=format&fit=crop&w=1000&q=85",
-  },
-  {
-    id: "lagoon-pavilion",
-    name: "Lagoon Pavilion",
-    location: "Phuket",
-    price: 650,
-    rating: 4.7,
-    amenities: ["Fine Dining", "Lagoon Access"],
-    image:
-      "https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?auto=format&fit=crop&w=1000&q=85",
-  },
-];
 
 const maxPrice = ref("");
 const minPrice = ref("");
@@ -270,8 +215,8 @@ function resetFilters() {
                       ? `Remove ${hotel.name} from favorites`
                       : `Save ${hotel.name}`
                   "
-                  class="text-lg leading-none text-[#b8bfd0] hover:text-[#07166b]"
-                  :class="isFavorite(hotel.id) ? 'text-[#07166b]' : ''"
+                  class="text-lg leading-none text-slate-400 transition-colors hover:text-red-500"
+                  :class="isFavorite(hotel.id) ? '!text-red-600' : ''"
                   @click="handleFavorite(hotel)"
                 >
                   {{ isFavorite(hotel.id) ? "♥" : "♡" }}

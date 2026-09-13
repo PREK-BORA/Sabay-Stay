@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useAuth } from "~/composables/useAuth";
+import { getHotelById } from "~/data/hotels";
 
 definePageMeta({ layout: "user", middleware: "auth" });
 
@@ -27,7 +28,7 @@ interface Booking {
 }
 
 const { user } = useAuth();
-const { $auth, $db } = useNuxtApp();
+const { $auth, $db } = useNuxtApp() as any;
 const selectedBooking = ref<Booking | null>(null);
 const isLoading = ref(true);
 const bookingError = ref("");
@@ -55,54 +56,18 @@ function getDisplayStatus(booking: Booking): Booking["status"] {
   return booking.status;
 }
 
-const bookings = ref<Booking[]>([
-  {
-    id: "SBY-88392",
-    property: "The Azure Retreat",
-    location: "Maldives",
-    dates: "Oct 12 - Oct 18, 2026",
-    status: "Confirmed",
-    total: "$4,250",
-    image:
-      "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
-    rating: "4.9 / 5",
-    roomType: "Oceanfront Suite",
-    guests: 2,
-    facilities: ["Ocean view", "King bed", "Breakfast included", "Wi-Fi"],
-    checkIn: "October 12, 2026",
-    checkOut: "October 18, 2026",
-    nights: 6,
-    roomPrice: 4200,
-    taxes: 150,
-    discount: 100,
-  },
-  {
-    id: "SBY-90114",
-    property: "Metro Grand Suites",
-    location: "Tokyo, Japan",
-    dates: "Nov 05 - Nov 10, 2026",
-    status: "Pending",
-    total: "$1,800",
-    image:
-      "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=800&q=80",
-    rating: "4.7 / 5",
-    roomType: "Deluxe City Suite",
-    guests: 2,
-    facilities: ["City view", "King bed", "Breakfast included", "Wi-Fi"],
-    checkIn: "November 5, 2026",
-    checkOut: "November 10, 2026",
-    nights: 5,
-    roomPrice: 1750,
-    taxes: 100,
-    discount: 50,
-  },
-]);
+const bookings = ref<Booking[]>([]);
 
 const guestName = computed(() => user.value?.name || "Guest traveler");
 const guestEmail = computed(() => user.value?.email || "guest@example.com");
 const guestPhone = computed(() => user.value?.phone || "Not provided");
 
 async function loadBookings() {
+  if (!$auth || !$db) {
+    isLoading.value = false;
+    return;
+  }
+
   const firebaseUser = $auth.currentUser;
 
   if (!firebaseUser) {
@@ -125,21 +90,21 @@ async function loadBookings() {
       const checkOut = String(data.checkOut || "");
       const nights = Number(data.nights || 0);
       const roomPrice = Number(data.pricePerNight || 0) * nights;
+      const hotel = getHotelById(String(data.hotelId || ""));
 
       return {
         id: bookingDoc.id,
-        property: String(data.hotelName || "SabayStay property"),
-        location: "Your saved hotel booking",
+        property: String(data.hotelName || hotel?.name || "SabayStay property"),
+        location: hotel ? hotel.location : "Your saved hotel booking",
         dates: `${checkIn} - ${checkOut}`,
         status: (status.charAt(0).toUpperCase() +
           status.slice(1)) as Booking["status"],
         total: `$${Number(data.total || 0).toLocaleString()}`,
-        image:
-          "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=800&q=80",
-        rating: "Not rated",
+        image: hotel?.image || "",
+        rating: hotel ? `${hotel.rating} / 5` : "Not rated",
         roomType: String(data.roomName || "Room"),
         guests: Number(data.guests || 1),
-        facilities: [],
+        facilities: hotel ? hotel.amenities : [],
         checkIn,
         checkOut,
         nights,
@@ -153,7 +118,11 @@ async function loadBookings() {
       const cancelledIds = getCancelledBookingIds();
       bookings.value = savedBookings.map((booking) =>
         cancelledIds.includes(booking.id)
-          ? { ...booking, status: "Cancelled" as Booking["status"], total: "$0" }
+          ? {
+              ...booking,
+              status: "Cancelled" as Booking["status"],
+              total: "$0",
+            }
           : booking,
       );
     }
@@ -168,9 +137,13 @@ async function loadBookings() {
 let unsubscribe = () => {};
 
 onMounted(() => {
-  unsubscribe = onAuthStateChanged($auth, () => {
-    void loadBookings();
-  });
+  if ($auth && typeof onAuthStateChanged === "function") {
+    unsubscribe = onAuthStateChanged($auth, () => {
+      void loadBookings();
+    });
+  } else {
+    isLoading.value = false;
+  }
 });
 
 onBeforeUnmount(() => unsubscribe());
@@ -232,8 +205,12 @@ function downloadConfirmation() {
         Manage your upcoming stays and travel plans.
       </p>
     </div>
-    <div v-if="isLoading" class="text-sm text-[#65728a]">Loading bookings...</div>
-    <div v-else-if="bookingError" class="text-sm text-red-600">{{ bookingError }}</div>
+    <div v-if="isLoading" class="text-sm text-[#65728a]">
+      Loading bookings...
+    </div>
+    <div v-else-if="bookingError" class="text-sm text-red-600">
+      {{ bookingError }}
+    </div>
     <div v-else class="space-y-4">
       <article
         v-for="booking in bookings"
@@ -282,8 +259,14 @@ function downloadConfirmation() {
             View Details
           </button>
         </div>
-      </article>
-    </div>
+       </article>
+       <div
+         v-if="bookings.length === 0"
+         class="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm"
+       >
+         <p class="text-sm text-[#65728a]">You have no bookings yet.</p>
+       </div>
+     </div>
 
     <div
       v-if="selectedBooking"
@@ -391,7 +374,8 @@ function downloadConfirmation() {
                       v-for="facility in selectedBooking.facilities"
                       :key="facility"
                       class="rounded-full bg-[#e5f0ed] px-2.5 py-1 text-xs text-[#087d72]"
-                      >{{ facility }}</span>
+                      >{{ facility }}</span
+                    >
                   </dd>
                 </div>
               </dl>
