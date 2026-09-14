@@ -2,6 +2,7 @@ import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
+import { defineNuxtPlugin } from "nuxt/app";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAjs-LrDWTU5yTOVU3jhv6N4YkMRNvwK5o",
