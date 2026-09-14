@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useAuth } from "~/composables/useAuth";
+import { onMounted, ref } from "vue";
+import { useAuth } from "~/composables/auth/useAuth";
 
 definePageMeta({ layout: "user", middleware: "auth" });
 

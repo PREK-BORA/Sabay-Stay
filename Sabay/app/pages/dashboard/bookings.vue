@@ -2,8 +2,9 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { useAuth } from "~/composables/useAuth";
-import { getHotelById } from "~/data/hotels";
+import { useAuth } from "~/composables/auth/useAuth";
+import { useNuxtApp } from "nuxt/app";
+
 
 definePageMeta({ layout: "user", middleware: "auth" });
 

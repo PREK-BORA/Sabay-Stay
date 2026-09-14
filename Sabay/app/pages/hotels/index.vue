@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { useFavorites } from "~/composables/user/useFavorites";
 import { hotels, type Hotel } from "~/data/hotels";
 
 const { favorites, isFavorite, toggleFavorite } = useFavorites();

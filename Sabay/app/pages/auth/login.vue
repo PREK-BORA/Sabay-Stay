@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { navigateTo } from "nuxt/app";
 import { ref } from "vue";
-import { useAuth } from "~/composables/useAuth";
+import { useAuth } from "~/composables/auth/useAuth";
 
 const showPassword = ref(false);
 const email = ref("");

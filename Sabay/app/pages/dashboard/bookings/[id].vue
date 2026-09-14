@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from "vue";
 import { doc, getDoc } from "firebase/firestore";
-import { useAuth } from "~/composables/useAuth";
 import { getHotelById } from "~/data/hotels";
+import { useNuxtApp } from "nuxt/app";
 
 interface BookingDetails {
   property: string;

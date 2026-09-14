@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useAuth } from "~/composables/useAuth";
-import { useUserData } from "~/composables/useUserData";
+import { useAuth } from '~/composables/auth/useAuth';
+import { useUserData } from '~/composables/user/useUserData';
 
 definePageMeta({ layout: "user", middleware: "auth" });
 

@@ -1,7 +1,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { useFavorites } from "~/composables/useFavorites";
+import { useFavorites } from "./useFavorites";
+import { useNuxtApp } from "nuxt/app";
 
 export function useUserData() {
   const { $auth, $db } = useNuxtApp() as any;
