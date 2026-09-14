@@ -53,7 +53,7 @@ const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
 </script>
 
 <template>
-  <div class="mx-auto max-w-[1280px] px-5 pb-16 pt-8 md:px-8">
+  <div class="mx-auto max-w-7xl px-5 pb-16 pt-8 md:px-8">
     <section class="text-center">
       <h1
         class="sabay-display text-5xl font-black tracking-[-0.06em] text-[#1d2f52] md:text-[5.5rem]"
@@ -66,7 +66,7 @@ const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
       </p>
 
       <div
-        class="mx-auto mt-8 flex max-w-4xl flex-col gap-3 rounded-[1.5rem] bg-white p-3 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center"
+        class="mx-auto mt-8 flex max-w-4xl flex-col gap-3 rounded-3xl bg-white p-3 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-center"
       >
         <div
           class="flex flex-1 items-center gap-3 rounded-xl border border-slate-200 bg-[#f9fafb] px-4 py-3 text-left"
@@ -76,7 +76,7 @@ const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
         </div>
 
         <div
-          class="flex items-center gap-3 rounded-xl border border-slate-200 bg-[#f9fafb] px-4 py-3 text-left md:w-[220px]"
+          class="flex items-center gap-3 rounded-xl border border-slate-200 bg-[#f9fafb] px-4 py-3 text-left md:w-55"
         >
           <span class="text-xl">▣</span>
           <span class="text-[#495d7d]">Any Season</span>
@@ -107,26 +107,26 @@ const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
 
     <section class="mt-10 grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
       <div
-        class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
+        class="overflow-hidden rounded-4xl bg-white shadow-sm ring-1 ring-slate-200"
       >
-        <div class="relative h-[360px] overflow-hidden md:h-[440px]">
+        <div class="relative h-90 overflow-hidden md:h-110">
           <img
             class="h-full w-full object-cover"
-            src="https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1400&q=80"
-            alt="Amalfi Coast"
+            :src="destinations[0]?.image || ''"
+            :alt="destinations[0]?.name || 'Destination image'"
           />
           <div
-            class="absolute inset-0 bg-gradient-to-t from-[#0d1d30]/80 via-[#081826]/20 to-transparent"
+            class="absolute inset-0 bg-linear-to-t from-[#0d1d30]/80 via-[#081826]/20 to-transparent"
           />
 
           <div class="absolute inset-x-0 bottom-0 p-6 text-white">
             <div class="flex items-center justify-between gap-3">
               <div>
                 <p class="text-sm uppercase tracking-[0.22em] text-white/85">
-                  Italy
+                  {{ destinations[0]?.country || 'Destination' }}
                 </p>
                 <h2 class="sabay-display mt-2 text-5xl font-black">
-                  Amalfi Coast
+                  {{ destinations[0]?.name || 'Featured destination' }}
                 </h2>
               </div>
               <div
@@ -137,8 +137,7 @@ const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
             </div>
             <div class="mt-5 flex items-center justify-between gap-4">
               <p class="max-w-md text-lg text-white/85">
-                Dramatic cliffs, pastel villages, and the sparkling
-                Mediterranean.
+                {{ destinations[0]?.description || 'Explore this destination.' }}
               </p>
               <button
                 class="rounded-full border border-white/75 bg-white/10 px-5 py-3 text-sm font-medium text-white hover:bg-white/20"
@@ -152,16 +151,16 @@ const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
 
       <div class="space-y-5">
         <div
-          class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
+          class="overflow-hidden rounded-4xl bg-white shadow-sm ring-1 ring-slate-200"
         >
-          <div class="relative h-[220px] overflow-hidden">
+          <div class="relative h-55 overflow-hidden">
             <img
-              :src="destinations[1].image"
+              :src="destinations[1]?.image || ''"
               class="h-full w-full object-cover"
-              alt="Kyoto"
+              :alt="destinations[1]?.name || 'Kyoto'"
             />
             <div
-              class="absolute inset-0 bg-gradient-to-t from-[#0f1d29]/70 to-transparent"
+              class="absolute inset-0 bg-linear-to-t from-[#0f1d29]/70 to-transparent"
             />
             <div class="absolute inset-x-0 bottom-0 p-5 text-white">
               <div class="flex items-center justify-between gap-3">
@@ -182,16 +181,16 @@ const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
         </div>
 
         <div
-          class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
+          class="overflow-hidden rounded-4xl bg-white shadow-sm ring-1 ring-slate-200"
         >
-          <div class="relative h-[220px] overflow-hidden">
+          <div class="relative h-55 overflow-hidden">
             <img
-              :src="destinations[2].image"
+              :src="destinations[2]?.image || ''"
               class="h-full w-full object-cover"
-              alt="The Maldives"
+              :alt="destinations[2]?.name || 'The Maldives'"
             />
             <div
-              class="absolute inset-0 bg-gradient-to-t from-[#0a2035]/70 to-transparent"
+              class="absolute inset-0 bg-linear-to-t from-[#0a2035]/70 to-transparent"
             />
             <div class="absolute inset-x-0 bottom-0 p-5 text-white">
               <div class="flex items-center justify-between gap-3">
@@ -217,24 +216,26 @@ const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
 
     <section class="mt-6 grid gap-5 xl:grid-cols-[0.95fr_1.05fr_0.75fr]">
       <div
-        class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
+        class="overflow-hidden rounded-4xl bg-white shadow-sm ring-1 ring-slate-200"
       >
-        <div class="relative h-[260px] overflow-hidden">
+        <div class="relative h-65 overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80"
+            :src="destinations[4]?.image || ''"
             class="h-full w-full object-cover"
-            alt="Swiss Alps"
+            :alt="destinations[4]?.name || 'Destination image'"
           />
           <div
-            class="absolute inset-0 bg-gradient-to-t from-[#091827]/80 via-[#0a1e2b]/25 to-transparent"
+            class="absolute inset-0 bg-linear-to-t from-[#091827]/80 via-[#0a1e2b]/25 to-transparent"
           />
           <div class="absolute inset-x-0 bottom-0 p-5 text-white">
             <p class="text-sm uppercase tracking-[0.18em] text-white/80">
-              Switzerland
+              {{ destinations[4]?.country || 'Destination' }}
             </p>
-            <h3 class="sabay-display mt-2 text-4xl font-black">Swiss Alps</h3>
+            <h3 class="sabay-display mt-2 text-4xl font-black">
+              {{ destinations[4]?.name || 'Featured destination' }}
+            </h3>
             <p class="mt-2 text-sm text-white/80">
-              Pristine slopes and exclusive alpine retreats.
+              {{ destinations[4]?.description || 'Explore this destination.' }}
             </p>
             <button
               class="mt-4 rounded-xl border border-white/70 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20"
@@ -246,31 +247,33 @@ const filters = ["All Regions", "Coastal", "Cultural", "Mountains", "Tropical"];
       </div>
 
       <div
-        class="overflow-hidden rounded-[2rem] bg-white shadow-sm ring-1 ring-slate-200"
+        class="overflow-hidden rounded-4xl bg-white shadow-sm ring-1 ring-slate-200"
       >
-        <div class="relative h-[260px] overflow-hidden">
+        <div class="relative h-65 overflow-hidden">
           <img
-            src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"
+            :src="destinations[3]?.image || ''"
             class="h-full w-full object-cover"
-            alt="Costa Rica"
+            :alt="destinations[3]?.name || 'Destination image'"
           />
           <div
-            class="absolute inset-0 bg-gradient-to-t from-[#0a1d28]/80 to-transparent"
+            class="absolute inset-0 bg-linear-to-t from-[#0a1d28]/80 to-transparent"
           />
           <div class="absolute inset-x-0 bottom-0 p-5 text-white">
             <p class="text-sm uppercase tracking-[0.18em] text-white/80">
-              Central America
+              {{ destinations[3]?.country || 'Destination' }}
             </p>
-            <h3 class="sabay-display mt-2 text-4xl font-black">Costa Rica</h3>
+            <h3 class="sabay-display mt-2 text-4xl font-black">
+              {{ destinations[3]?.name || 'Featured destination' }}
+            </h3>
             <p class="mt-2 text-sm text-white/80">
-              Eco-luxury amid vibrant biodiversity.
+              {{ destinations[3]?.description || 'Explore this destination.' }}
             </p>
           </div>
         </div>
       </div>
 
       <div
-        class="flex items-center justify-center rounded-[2rem] border border-slate-200 bg-[#f7f5f1] p-6 shadow-sm"
+        class="flex items-center justify-center rounded-4xl border border-slate-200 bg-[#f7f5f1] p-6 shadow-sm"
       >
         <div class="text-center">
           <div

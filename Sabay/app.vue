@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<!-- <script setup lang="ts">
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
@@ -67,4 +67,10 @@ const isLoginPage = computed(() => route.path === "/auth/login");
       v-if="!isBookingConfirmation && !isRegisterPage && !isLoginPage"
     />
   </div>
+</template>  -->
+ 
+<template>
+  <NuxtLayout>
+    <NuxtPage />
+  </NuxtLayout>
 </template>

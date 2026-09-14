@@ -1,4 +1,56 @@
 <script setup lang="ts">
+import { useHotels } from '~/composables/useHotels'
+import { useUserData } from '~/composables/useUserData'
+import { useAuth } from '~/composables/useAuth'
+
+const route = useRoute()
+const router = useRouter()
+const { user: authUser } = useAuth()
+const { getHotelById } = useHotels()
+const { addBooking, toggleFavorite, isFavorite } = useUserData()
+
+// ទាញយកព័ត៌មាន Hotel តាម ID ពី URL
+const hotelId = Number(route.params.id)
+const hotel = computed(() => getHotelById(hotelId))
+
+// មុខងារកក់ (Book Now)
+const handleBooking = async (roomTitle?: string, roomPrice?: number | string) => {
+  const currentHotel = hotel.value
+  const priceToPay = typeof roomPrice === 'number' 
+    ? roomPrice 
+    : (currentHotel?.price || 450)
+
+  const newBooking = {
+    id: Date.now(),
+    ref: `#SBY-${Math.floor(10000 + Math.random() * 90000)}`,
+    hotelName: currentHotel ? `${currentHotel.name} (${roomTitle || 'Standard Room'})` : 'The Azure Oasis Resort',
+    guestName: authUser.value?.name || 'User Account',
+    checkIn: 'Nov 12, 2026',
+    checkOut: 'Nov 18, 2026',
+    totalPrice: priceToPay,
+    status: 'Confirmed' as const
+  }
+
+  await addBooking(newBooking)
+  router.push('/dashboard/bookings')
+}
+
+// មុខងារ Save / Favorite
+const handleToggleFavorite = () => {
+  if (hotel.value) {
+    toggleFavorite(hotel.value)
+  } else {
+    toggleFavorite({
+      id: hotelId || 1,
+      name: "The Azure Oasis Resort",
+      location: "123 Coastal Highway, Emerald Bay",
+      price: 450,
+      rating: 4.8,
+      image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80"
+    })
+  }
+}
+
 const gallery = [
   "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=1600&q=80",
   "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?auto=format&fit=crop&w=900&q=80",
@@ -19,6 +71,7 @@ const rooms = [
   {
     title: "Deluxe Garden Room",
     price: "$450",
+    numericPrice: 450,
     per: "/ night",
     description:
       "A spacious retreat featuring elegant minimalist decor, a private balcony with serene garden views, and a luxurious rain shower.",
@@ -31,6 +84,7 @@ const rooms = [
   {
     title: "Oceanfront Suite",
     price: "$780",
+    numericPrice: 780,
     per: "/ night",
     description:
       "The ultimate indulgence: Wake up to panoramic ocean views, unwind in a breathtaking soaking tub, and enjoy expansive living spaces designed for pure relaxation.",
@@ -74,14 +128,14 @@ const reviews = [
           <h1
             class="sabay-display text-5xl font-black tracking-[-0.05em] text-[#1d2f52] md:text-7xl"
           >
-            The Azure Oasis Resort
+            {{ hotel?.name || 'The Azure Oasis Resort' }}
           </h1>
           <div
             class="mt-4 flex flex-wrap items-center gap-3 text-sm text-[#44506a]"
           >
-            <span>📍 123 Coastal Highway, Emerald Bay, Bivera</span>
+            <span>📍 {{ hotel?.location || '123 Coastal Highway, Emerald Bay, Bivera' }}</span>
             <span class="text-[#f7b500]">★★★★★</span>
-            <span>4.8 (245 Reviews)</span>
+            <span>{{ hotel?.rating || '4.8' }} ({{ hotel?.reviewsCount || '245' }} Reviews)</span>
           </div>
         </div>
 
@@ -92,9 +146,11 @@ const reviews = [
             Share
           </button>
           <button
-            class="rounded-full border border-slate-300 bg-white px-4 py-2 hover:border-[#1d2f52]"
+            @click="handleToggleFavorite"
+            class="rounded-full border px-4 py-2 transition-colors"
+            :class="isFavorite(hotelId || 1) ? 'bg-rose-50 border-rose-300 text-rose-600' : 'bg-white border-slate-300 hover:border-[#1d2f52]'"
           >
-            Save
+            {{ isFavorite(hotelId || 1) ? '♥ Saved' : 'Save' }}
           </button>
         </div>
       </div>
@@ -103,8 +159,8 @@ const reviews = [
         <div class="overflow-hidden rounded-[2rem]">
           <img
             class="h-[420px] w-full object-cover"
-            src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80"
-            alt="Azure Oasis Resort"
+            :src="hotel?.image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80'"
+            :alt="hotel?.name || 'Azure Oasis Resort'"
           />
         </div>
 
@@ -147,11 +203,7 @@ const reviews = [
             About This Property
           </h2>
           <p class="mt-5 text-lg leading-8 text-[#4a5871]">
-            Experience unparalleled luxury at The Azure Oasis Resort, where
-            minimalist design meets the lush vibrancy of the tropics. Nestled on
-            a pristine stretch of private coastline, our sanctuary offers a
-            seamless blend of indoor and outdoor living, designed for the
-            discerning traveler seeking deep relaxation and refined elegance.
+            {{ hotel?.description || 'Experience unparalleled luxury at The Azure Oasis Resort, where minimalist design meets the lush vibrancy of the tropics. Nestled on a pristine stretch of private coastline, our sanctuary offers a seamless blend of indoor and outdoor living, designed for the discerning traveler seeking deep relaxation and refined elegance.' }}
           </p>
 
           <p class="mt-5 text-lg leading-8 text-[#4a5871]">
@@ -172,7 +224,7 @@ const reviews = [
           </h3>
           <div class="mt-6 flex flex-wrap gap-3">
             <span
-              v-for="item in amenities"
+              v-for="item in (hotel?.amenities || amenities)"
               :key="item"
               class="rounded-full border border-[#d9e4ef] bg-[#eef6fb] px-4 py-2 text-sm text-[#20365f]"
             >
@@ -245,7 +297,8 @@ const reviews = [
                     View Room Details
                   </button>
                   <button
-                    class="rounded-xl border border-[#1d2f52] bg-white px-5 py-3 text-sm font-semibold text-[#1d2f52] hover:bg-[#1d2f52] hover:text-white"
+                    @click="handleBooking(room.title, room.numericPrice)"
+                    class="rounded-xl border border-[#1d2f52] bg-white px-5 py-3 text-sm font-semibold text-[#1d2f52] hover:bg-[#1d2f52] hover:text-white transition-colors"
                   >
                     {{
                       room.title === "Deluxe Garden Room"
@@ -298,7 +351,7 @@ const reviews = [
 
       <aside class="lg:pt-6">
         <div
-          class="rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200"
+          class="sticky top-6 rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-slate-200"
         >
           <div
             class="flex items-center justify-between gap-3 rounded-[1rem] border border-slate-200 bg-[#f5f7fa] p-4"
@@ -307,7 +360,9 @@ const reviews = [
               <p class="text-xs uppercase tracking-[0.2em] text-slate-500">
                 Price from
               </p>
-              <p class="mt-3 text-4xl font-black text-[#1d2f52]">$450</p>
+              <p class="mt-3 text-4xl font-black text-[#1d2f52]">
+                ${{ hotel?.price || '450' }}
+              </p>
               <p class="text-xs uppercase tracking-[0.18em] text-slate-400">
                 / night
               </p>
@@ -337,7 +392,8 @@ const reviews = [
           </div>
 
           <button
-            class="mt-5 w-full rounded-xl bg-[#0d224a] px-4 py-4 text-base font-semibold text-white hover:bg-[#0a1d3d]"
+            @click="handleBooking('Standard Suite', hotel?.price)"
+            class="mt-5 w-full rounded-xl bg-[#0d224a] px-4 py-4 text-base font-semibold text-white hover:bg-[#0a1d3d] transition-colors"
           >
             Check Availability
           </button>
