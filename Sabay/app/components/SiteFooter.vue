@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import { Globe, MessageSquare, Instagram, Send } from "lucide-vue-next";
 
 const email = ref("");
 const isSubscribed = ref(false);
@@ -14,55 +15,54 @@ function subscribe() {
 
 <template>
   <footer
-    class="border-t border-[#e2dfe1] bg-[#f3f0f2] px-5 py-10 text-[#171c31] md:px-9 md:py-11"
+    class="border-t border-slate-200 bg-slate-100 px-4 py-10 font-normal text-slate-800 sm:px-6 md:py-12 lg:px-8"
   >
-    <div class="mx-auto max-w-[1200px]">
+    <div class="mx-auto max-w-7xl">
       <div
-        class="grid gap-9 sm:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1fr_1fr] lg:gap-12"
+        class="grid gap-8 sm:grid-cols-2 lg:grid-cols-[1.8fr_1fr_1fr_1fr] lg:gap-12"
       >
         <div>
           <NuxtLink
             to="/"
-            class="sabay-display text-[1.55rem] font-bold tracking-[-0.06em] text-[#07166b]"
+            class="text-xl font-bold tracking-tight text-[#07166b]"
           >
-            Sabay<span class="font-sans font-semibold tracking-[-0.04em]"
-              >Stay</span
-            >
+            Sabay<span class="font-normal">Stay</span>
           </NuxtLink>
           <p
-            class="mt-2 max-w-[290px] text-[15px] leading-[1.4] text-[#30364b]"
+            class="mt-3 max-w-sm text-xs font-normal leading-relaxed text-slate-600"
           >
             Curating extraordinary premium luxury travel experiences. Discover
             serene escapes and meticulously crafted journeys designed for the
             discerning traveler.
           </p>
 
-          <form class="mt-7" @submit.prevent="subscribe">
+          <form class="mt-6" @submit.prevent="subscribe">
             <label
               for="footer-email"
-              class="text-[15px] font-semibold tracking-[0.04em] text-[#171c31]"
+              class="block text-xs font-normal text-slate-900"
             >
               Subscribe to our newsletter
             </label>
-            <div class="mt-2 flex max-w-[308px]">
+            <div class="mt-2 flex max-w-sm">
               <input
                 id="footer-email"
                 v-model="email"
                 type="email"
                 required
                 placeholder="Email address"
-                class="min-w-0 flex-1 rounded-l-sm border border-[#9da0ad] bg-[#faf8f9] px-3 py-2.5 text-xs text-[#1c2238] outline-none placeholder:text-[#697188] focus:border-[#07166b]"
+                class="min-w-0 flex-1 rounded-l-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-normal text-slate-800 outline-none placeholder:text-slate-400 focus:border-[#07166b] focus:ring-1 focus:ring-[#07166b]"
               />
               <button
                 type="submit"
-                class="rounded-r-sm bg-[#07166b] px-4 py-2.5 text-xs font-semibold text-white transition-colors hover:bg-[#0d278a]"
+                class="inline-flex items-center gap-1.5 rounded-r-lg bg-[#07166b] px-4 py-2 text-xs font-normal text-white transition hover:bg-[#07166b]/90"
               >
-                Subscribe
+                <span>Subscribe</span>
+                <Send class="h-3 w-3" />
               </button>
             </div>
             <p
               v-if="isSubscribed"
-              class="mt-2 text-xs text-[#087d72]"
+              class="mt-2 text-xs font-normal text-emerald-600"
               role="status"
             >
               Thank you for subscribing.
@@ -70,76 +70,72 @@ function subscribe() {
           </form>
         </div>
 
-        <nav aria-label="Company" class="flex flex-col gap-2.5 text-[15px]">
-          <h2 class="sabay-display mb-1 text-lg font-bold text-[#171717]">
+        <nav aria-label="Company" class="flex flex-col gap-2.5 text-xs font-normal">
+          <h2 class="mb-1 text-sm font-bold text-slate-900">
             Company
           </h2>
-          <NuxtLink to="/about" class="hover:text-[#07166b]">About</NuxtLink>
-          <NuxtLink to="/services" class="hover:text-[#07166b]"
-            >Services</NuxtLink
-          >
-          <NuxtLink to="/offers" class="hover:text-[#07166b]">Offers</NuxtLink>
-          <a href="#" class="hover:text-[#07166b]">Careers</a>
+          <NuxtLink to="/" class="text-slate-600 hover:text-[#07166b]">Home</NuxtLink>
+          <NuxtLink to="/about" class="text-slate-600 hover:text-[#07166b]">About</NuxtLink>
+          <NuxtLink to="/services" class="text-slate-600 hover:text-[#07166b]">Services</NuxtLink>
+          <NuxtLink to="/offers" class="text-slate-600 hover:text-[#07166b]">Offers</NuxtLink>
+          <a href="#" class="text-slate-600 hover:text-[#07166b]">Careers</a>
         </nav>
 
-        <nav aria-label="Discovery" class="flex flex-col gap-2.5 text-[13px]">
-          <h2 class="sabay-display mb-1 text-lg font-bold text-[#171717]">
+        <nav aria-label="Discovery" class="flex flex-col gap-2.5 text-xs font-normal">
+          <h2 class="mb-1 text-sm font-bold text-slate-900">
             Discovery
           </h2>
-          <NuxtLink to="/hotels" class="hover:text-[#07166b]">Hotels</NuxtLink>
-          <NuxtLink to="/destinations" class="hover:text-[#07166b]"
-            >Destinations</NuxtLink
-          >
-          <NuxtLink to="/experiences" class="hover:text-[#07166b]"
-            >Experiences</NuxtLink
-          >
+          <NuxtLink to="/hotels" class="text-slate-600 hover:text-[#07166b]">Hotels</NuxtLink>
+          <NuxtLink to="/destinations" class="text-slate-600 hover:text-[#07166b]">Destinations</NuxtLink>
+          <NuxtLink to="/experiences" class="text-slate-600 hover:text-[#07166b]">Experiences</NuxtLink>
         </nav>
 
-        <nav aria-label="Support" class="flex flex-col gap-2.5 text-[13px]">
-          <h2 class="sabay-display mb-1 text-lg font-bold text-[#171717]">
+        <nav aria-label="Support" class="flex flex-col gap-2.5 text-xs font-normal">
+          <h2 class="mb-1 text-sm font-bold text-slate-900">
             Support
           </h2>
-          <NuxtLink to="/contact" class="hover:text-[#07166b]"
-            >Contact</NuxtLink
-          >
-          <NuxtLink to="/help" class="hover:text-[#07166b]">FAQ</NuxtLink>
-          <NuxtLink to="/help" class="hover:text-[#07166b]"
-            >Help Center</NuxtLink
-          >
+          <NuxtLink to="/contact" class="text-slate-600 hover:text-[#07166b]">Contact</NuxtLink>
+          <NuxtLink to="/help" class="text-slate-600 hover:text-[#07166b]">FAQ</NuxtLink>
+          <NuxtLink to="/help" class="text-slate-600 hover:text-[#07166b]">Help Center</NuxtLink>
         </nav>
       </div>
 
       <div
-        class="mt-9 flex flex-col gap-5 border-t border-[#dedbde] pt-6 text-[15px] tracking-[0.03em] text-[#171c31] md:flex-row md:items-center md:justify-between"
+        class="mt-10 flex flex-col gap-4 border-t border-slate-200 pt-6 text-xs font-normal text-slate-500 md:flex-row md:items-center md:justify-between"
       >
-        <p>© 2024 SabayStay Premium Travel. All rights reserved.</p>
-        <nav aria-label="Legal navigation" class="flex gap-5">
+        <p>© 2026 SabayStay Premium Travel. All rights reserved.</p>
+
+        <nav aria-label="Legal navigation" class="flex gap-4">
           <NuxtLink to="/" class="hover:text-[#07166b]">Sitemap</NuxtLink>
           <a href="#" class="hover:text-[#07166b]">Privacy Policy</a>
           <a href="#" class="hover:text-[#07166b]">Terms of Service</a>
         </nav>
-        <div class="flex gap-3" aria-label="Social links">
+
+        <div class="flex gap-2" aria-label="Social links">
           <a
             href="#"
             aria-label="Website"
             title="Website"
-            class="flex h-8 w-8 items-center justify-center rounded-full border border-[#8b8e9c] text-base hover:border-[#07166b] hover:text-[#07166b]"
-            >◎</a
+            class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition hover:border-[#07166b] hover:text-[#07166b]"
           >
+            <Globe class="h-4 w-4" />
+          </a>
           <a
             href="#"
             aria-label="Message"
             title="Message"
-            class="flex h-8 w-8 items-center justify-center rounded-full border border-[#8b8e9c] text-base hover:border-[#07166b] hover:text-[#07166b]"
-            >□</a
+            class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition hover:border-[#07166b] hover:text-[#07166b]"
           >
+            <MessageSquare class="h-4 w-4" />
+          </a>
           <a
             href="#"
             aria-label="Instagram"
             title="Instagram"
-            class="flex h-8 w-8 items-center justify-center rounded-full border border-[#8b8e9c] text-base hover:border-[#07166b] hover:text-[#07166b]"
-            >▣</a
+            class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 transition hover:border-[#07166b] hover:text-[#07166b]"
           >
+            <Instagram class="h-4 w-4" />
+          </a>
         </div>
       </div>
     </div>

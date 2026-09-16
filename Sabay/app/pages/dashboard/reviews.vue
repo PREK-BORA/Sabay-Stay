@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { definePageMeta } from '#imports'
+
 import { onMounted, ref } from "vue";
 
 definePageMeta({ layout: "user", middleware: "auth" });

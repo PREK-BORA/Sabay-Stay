@@ -1,8 +1,7 @@
 <template>
   <div class="p-6 bg-gray-50 min-h-screen">
-    
     <!-- Header Navigation -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div>
         <div class="flex items-center gap-2 mb-1">
           <NuxtLink to="/owner/my_hotels" class="text-xs text-gray-500 hover:text-gray-900">My Properties</NuxtLink>
@@ -12,15 +11,15 @@
         <h1 class="text-3xl font-serif font-bold text-gray-900">Room Management</h1>
 
         <!-- Search & Hotel Filter Bar -->
-        <div class="flex items-center gap-3 max-w-xl mb-4 mt-3">
+        <div class="flex items-center gap-3 max-w-xl mt-3">
           <input 
             v-model="searchQuery"
             type="text"
-            placeholder="Search rooms by name ..."
+            placeholder="Search rooms by name..."
             class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-950 transition shadow-xs"
           />
 
-          <!-- Hotel Selector Dropdown in Page Header -->
+          <!-- Hotel Selector Dropdown -->
           <select 
             v-model="selectedHotelId" 
             @change="handleHotelChange"
@@ -35,65 +34,69 @@
       
       <button 
         @click="openModal()" 
-        class="px-4 py-2.5 bg-indigo-950 hover:bg-indigo-900 text-white rounded-xl text-sm font-medium shadow-sm transition-colors flex items-center gap-2"
+        class="px-4 py-2.5 bg-indigo-950 hover:bg-indigo-900 text-white rounded-xl text-sm font-medium shadow-xs transition-colors flex items-center justify-center gap-2 self-start sm:self-auto"
       >
         + Add New Room
       </button>
     </div>
 
     <!-- Rooms Table / List -->
-    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      <div v-if="loading" class="text-center py-10 text-sm text-gray-500">
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden">
+      <div v-if="loading" class="text-center py-12 text-sm text-gray-500">
         Loading rooms...
       </div>
-      <table v-else-if="filteredRooms.length > 0" class="w-full text-left border-collapse text-sm">
-        <thead>
-          <tr class="bg-gray-50 text-xs text-gray-400 border-b border-gray-100 uppercase tracking-wider">
-            <th class="py-3 px-6 font-medium">Room Name</th>
-            <th class="py-3 px-6 font-medium">Hotel Property</th>
-            <th class="py-3 px-6 font-medium">Capacity</th>
-            <th class="py-3 px-6 font-medium">Beds</th>
-            <th class="py-3 px-6 font-medium">Price / Night</th>
-            <th class="py-3 px-6 font-medium">Status</th>
-            <th class="py-3 px-6 font-medium text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-100">
-          <tr v-for="room in filteredRooms" :key="room.id" class="hover:bg-gray-50/50 transition-colors">
-            <td class="py-4 px-6 font-medium text-gray-900">
-              <div>{{ room.name }}</div>
-              <div class="text-xs text-gray-400 font-normal">{{ room.type }}</div>
-            </td>
-            <td class="py-4 px-6 text-gray-600 font-medium">
-              {{ getHotelName(room.hotelId) }}
-            </td>
-            <td class="py-4 px-6 text-gray-600">{{ room.capacity }} Guests</td>
-            <td class="py-4 px-6 text-gray-600">{{ room.beds }}</td>
-            <td class="py-4 px-6 font-semibold text-gray-900">${{ room.price }}</td>
-            <td class="py-4 px-6">
-              <span :class="room.status === 'Booked' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'" class="px-2.5 py-1 text-xs rounded-full font-medium">
-                {{ room.status || 'Available' }}
-              </span>
-            </td>
-            <td class="py-4 px-6 text-right space-x-2">
-              <button 
-                @click="openModal(room)" 
-                class="px-3 py-1.5 text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-md font-medium transition-colors"
-              >
-                Edit
-              </button>
-              <button 
-                @click="handleDeleteRoom(room.id)" 
-                class="px-3 py-1.5 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-medium transition-colors"
-              >
-                Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div v-else class="text-center py-12 text-sm text-gray-500">
-        No rooms added yet. Click "+ Add New Room" above to create one.
+
+      <div v-else-if="filteredRooms.length > 0" class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-gray-50 text-xs text-gray-400 border-b border-gray-100 uppercase tracking-wider">
+              <th class="py-3 px-6 font-medium">Room Name</th>
+              <th class="py-3 px-6 font-medium">Hotel Property</th>
+              <th class="py-3 px-6 font-medium">Capacity</th>
+              <th class="py-3 px-6 font-medium">Beds</th>
+              <th class="py-3 px-6 font-medium">Price / Night</th>
+              <th class="py-3 px-6 font-medium">Status</th>
+              <th class="py-3 px-6 font-medium text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            <tr v-for="room in filteredRooms" :key="room.id" class="hover:bg-gray-50/50 transition-colors">
+              <td class="py-4 px-6 font-medium text-gray-900">
+                <div>{{ room.name }}</div>
+                <div class="text-xs text-gray-400 font-normal">{{ room.type }}</div>
+              </td>
+              <td class="py-4 px-6 text-gray-600 font-medium">
+                {{ getHotelName(room.hotelId) }}
+              </td>
+              <td class="py-4 px-6 text-gray-600">{{ room.capacity }} Guests</td>
+              <td class="py-4 px-6 text-gray-600">{{ room.beds }}</td>
+              <td class="py-4 px-6 font-semibold text-gray-900">${{ room.price }}</td>
+              <td class="py-4 px-6">
+                <span :class="room.status === 'Booked' ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'" class="px-2.5 py-1 text-xs rounded-full font-medium">
+                  {{ room.status || 'Available' }}
+                </span>
+              </td>
+              <td class="py-4 px-6 text-right space-x-2">
+                <button 
+                  @click="openModal(room)" 
+                  class="px-3 py-1.5 text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-md font-medium transition-colors"
+                >
+                  Edit
+                </button>
+                <button 
+                  @click="handleDeleteRoom(room.id)" 
+                  class="px-3 py-1.5 text-xs bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md font-medium transition-colors"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-else class="text-center py-16 text-sm text-gray-500">
+        No rooms found. Click "+ Add New Room" above to create one.
       </div>
     </div>
 
@@ -101,13 +104,14 @@
     <div 
       v-if="showAddRoomModal" 
       class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4 transition-all"
+      @click.self="closeModal"
     >
       <div class="bg-white rounded-2xl border border-gray-100 shadow-2xl max-w-lg w-full p-6 space-y-4">
         <div class="flex justify-between items-center border-b border-gray-100 pb-3">
           <h3 class="text-lg font-serif font-bold text-gray-900">
             {{ editingId ? 'Edit Room' : 'Add New Room' }}
           </h3>
-          <button @click="closeModal" class="text-gray-400 hover:text-gray-600">✕</button>
+          <button @click="closeModal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
         </div>
 
         <form @submit.prevent="handleSubmitRoom" class="space-y-3">
@@ -126,7 +130,7 @@
             </select>
           </div>
 
-          <!-- ROOM NAME ONLY -->
+          <!-- ROOM NAME -->
           <div>
             <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Room Name</label>
             <input 
@@ -199,14 +203,14 @@
             <button 
               type="button" 
               @click="closeModal" 
-              class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200"
+              class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition"
             >
               Cancel
             </button>
             <button 
               type="submit" 
               :disabled="isSubmitting" 
-              class="px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 disabled:opacity-50"
+              class="px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 disabled:opacity-50 transition"
             >
               {{ isSubmitting ? 'Saving...' : (editingId ? 'Update Room' : 'Save Room') }}
             </button>
@@ -253,7 +257,6 @@ const saveLocalRooms = (hotelId, data) => {
   }
 }
 
-// 1. Synchronously hydrate local hotels cache immediately on client startup
 const initHotelsList = () => {
   if (import.meta.client) {
     const cached = localStorage.getItem('sabay_hotels_cache')
@@ -310,7 +313,6 @@ const closeModal = () => {
   roomForm.value = { ...initialForm }
 }
 
-// ⚡ Instant load rooms using localStorage cache first
 const loadRooms = async () => {
   let currentHotelId = route.query.hotelId
 
@@ -327,20 +329,18 @@ const loadRooms = async () => {
     return
   }
 
-  // Instant local cache load (0ms delay)
   if (import.meta.client) {
     const cached = localStorage.getItem(`sabay_rooms_${currentHotelId}`)
     if (cached) {
       try {
         rooms.value = JSON.parse(cached)
-        loading.value = false // Hide loader instantly
+        loading.value = false
       } catch (e) {
         console.error(e)
       }
     }
   }
 
-  // Background sync with Firestore
   try {
     const res = await getRoomsByHotel(currentHotelId)
     if (res) {

@@ -1,3 +1,5 @@
+import { defineNuxtRouteMiddleware, navigateTo } from '#imports'
+
 export default defineNuxtRouteMiddleware(() => {
   if (import.meta.server) return;
 

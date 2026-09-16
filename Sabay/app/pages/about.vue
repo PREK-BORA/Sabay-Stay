@@ -1,4 +1,4 @@
-<script setup lang="ts">
+  <script setup lang="ts">
 import BoraImage from "~/assets/css/image/developer.jpg";
 import vannetImage from "~/assets/css/image/photo_2026-09-10_21-56-47.jpg";
 import MakaraImage from "~/assets/css/image/ChatGPT Image Sep 11, 2026, 03_21_43 PM.png";

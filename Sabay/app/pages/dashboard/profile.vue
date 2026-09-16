@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useAuth } from "~/composables/auth/useAuth";
+import { definePageMeta } from "#imports";
+import {
+  Camera,
+  User,
+  Mail,
+  Phone,
+  Globe,
+  Save,
+  CheckCircle2,
+  Loader2,
+} from "lucide-vue-next";
 
 definePageMeta({ layout: "user", middleware: "auth" });
 
@@ -10,7 +21,9 @@ const email = ref("");
 const phone = ref("");
 const country = ref("");
 const saved = ref(false);
-const photoPreview = ref<string>("https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80");
+const photoPreview = ref<string>(
+  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"
+);
 const isUploading = ref(false);
 
 onMounted(() => {
@@ -60,26 +73,26 @@ function saveProfile() {
 <template>
   <div class="mx-auto max-w-3xl space-y-6">
     <div>
-      <h1 class="text-3xl font-bold text-[#1d2f52]">My Profile</h1>
-      <p class="mt-1 text-sm text-[#65728a]">
+      <h1 class="text-3xl font-bold text-slate-900">My Profile</h1>
+      <p class="mt-1 text-sm text-slate-500">
         Manage your personal information and preferences.
       </p>
     </div>
 
-    <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
       <div class="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
         <div class="relative">
           <img
             :src="photoPreview"
             alt="Profile photo"
-            class="h-28 w-28 rounded-full object-cover ring-4 ring-[#e5f0ed]"
+            class="h-28 w-28 rounded-full object-cover ring-4 ring-slate-100"
           />
           <label
             for="photo-upload"
-            class="absolute -bottom-1 -right-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[#0d224a] text-white shadow-md transition hover:bg-[#087d72]"
+            class="absolute -bottom-1 -right-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[#07166b] text-white shadow-md transition hover:bg-indigo-700"
             title="Change photo"
           >
-            <span aria-hidden="true">📷</span>
+            <Camera class="h-4 w-4" />
             <input
               id="photo-upload"
               type="file"
@@ -90,67 +103,91 @@ function saveProfile() {
           </label>
         </div>
         <div class="text-center sm:text-left">
-          <h2 class="text-xl font-bold text-[#0d224a]">Profile Photo</h2>
-          <p class="mt-1 text-sm text-[#53637c]">
+          <h2 class="text-lg font-bold text-slate-900">Profile Photo</h2>
+          <p class="mt-1 text-sm text-slate-500">
             JPG, PNG or GIF. Max 5MB.
           </p>
-          <p v-if="isUploading" class="mt-2 text-xs text-[#087d72]">
+          <p v-if="isUploading" class="mt-2 flex items-center justify-center gap-1.5 text-xs text-indigo-600 sm:justify-start">
+            <Loader2 class="h-3.5 w-3.5 animate-spin" />
             Uploading...
           </p>
         </div>
       </div>
     </section>
 
-    <section class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8">
-      <h2 class="text-lg font-bold text-[#0d224a]">Personal Information</h2>
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+      <h2 class="text-lg font-bold text-slate-900">Personal Information</h2>
+      
       <form class="mt-6 grid gap-5 sm:grid-cols-2" @submit.prevent="saveProfile">
-        <label class="text-sm font-medium text-[#1d2f52]">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">
           Full Name
-          <input
-            v-model="name"
-            required
-            class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-[#f7f6f2] px-4 text-sm outline-none transition focus:border-[#087d72] focus:bg-white"
-          />
-        </label>
-        <label class="text-sm font-medium text-[#1d2f52]">
-          Email
-          <input
-            v-model="email"
-            type="email"
-            required
-            class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-[#f7f6f2] px-4 text-sm outline-none transition focus:border-[#087d72] focus:bg-white"
-          />
-        </label>
-        <label class="text-sm font-medium text-[#1d2f52]">
-          Phone
-          <input
-            v-model="phone"
-            type="tel"
-            required
-            class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-[#f7f6f2] px-4 text-sm outline-none transition focus:border-[#087d72] focus:bg-white"
-          />
-        </label>
-        <label class="text-sm font-medium text-[#1d2f52]">
-          Country
-          <input
-            v-model="country"
-            required
-            class="mt-2 h-12 w-full rounded-xl border border-slate-200 bg-[#f7f6f2] px-4 text-sm outline-none transition focus:border-[#087d72] focus:bg-white"
-          />
+          <div class="relative mt-2 flex items-center">
+            <User class="absolute left-3.5 h-4 w-4 text-slate-400" />
+            <input
+              v-model="name"
+              required
+              placeholder="e.g. John Doe"
+              class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
+            />
+          </div>
         </label>
 
-        <div class="flex items-center gap-4 sm:col-span-2">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+          Email
+          <div class="relative mt-2 flex items-center">
+            <Mail class="absolute left-3.5 h-4 w-4 text-slate-400" />
+            <input
+              v-model="email"
+              type="email"
+              required
+              placeholder="e.g. johndoe@example.com"
+              class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
+            />
+          </div>
+        </label>
+
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+          Phone
+          <div class="relative mt-2 flex items-center">
+            <Phone class="absolute left-3.5 h-4 w-4 text-slate-400" />
+            <input
+              v-model="phone"
+              type="tel"
+              required
+              placeholder="e.g. +855 12 345 678"
+              class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
+            />
+          </div>
+        </label>
+
+        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+          Country
+          <div class="relative mt-2 flex items-center">
+            <Globe class="absolute left-3.5 h-4 w-4 text-slate-400" />
+            <input
+              v-model="country"
+              required
+              placeholder="e.g. Cambodia"
+              class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
+            />
+          </div>
+        </label>
+
+        <div class="flex items-center gap-4 sm:col-span-2 mt-2">
           <button
             type="submit"
-            class="rounded-xl bg-[#0d224a] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a1d3d]"
+            class="inline-flex items-center gap-2 rounded-xl bg-[#07166b] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-900"
           >
-            Save Changes
+            <Save class="h-4 w-4" />
+            <span>Save Changes</span>
           </button>
+
           <span
             v-if="saved"
-            class="text-sm font-medium text-emerald-700"
+            class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600"
             role="status"
           >
+            <CheckCircle2 class="h-4 w-4" />
             Profile saved successfully.
           </span>
         </div>

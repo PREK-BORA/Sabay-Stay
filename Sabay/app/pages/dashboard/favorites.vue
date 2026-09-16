@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { definePageMeta } from '#imports'
+
 import { computed } from "vue";
 import { useFavorites } from "~/composables/user/useFavorites";
 

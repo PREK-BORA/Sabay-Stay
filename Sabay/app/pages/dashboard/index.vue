@@ -1,14 +1,32 @@
 <script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { definePageMeta, useNuxtApp } from '#imports';
 import { useAuth } from '~/composables/auth/useAuth';
-import { useUserData } from '~/composables/user/useUserData';
+import { useFavorites } from "~/composables/user/useFavorites";
 
 definePageMeta({ layout: "user", middleware: "auth" });
 
 const { user } = useAuth();
-const { rewardPoints, totalBookings, totalFavorites } = useUserData();
+const { favorites } = useFavorites();
+const { $db } = useNuxtApp() as any;
+const bookingCount = ref(0);
+const totalFavorites = computed(() => favorites.value.length);
+const rewardPoints = computed(() => 500 + bookingCount.value * 1000);
+let unsubscribe = () => {};
+
+onMounted(() => {
+  if (!$db || !user.value?.id) return;
+  unsubscribe = onSnapshot(query(collection($db, "bookings"), where("userId", "==", user.value.id)), (snapshot) => {
+    bookingCount.value = snapshot.docs.filter((item) => String(item.data().status || "").toLowerCase() !== "cancelled").length;
+  });
+});
+
+onUnmounted(() => unsubscribe());
 </script>
 
 <template>
+
   <div class="space-y-8">
     <div>
       <h1 class="text-3xl font-serif font-bold text-slate-900">
@@ -30,7 +48,7 @@ const { rewardPoints, totalBookings, totalFavorites } = useUserData();
             Total Bookings
           </p>
           <p class="mt-3 text-3xl font-bold text-slate-900">
-            {{ totalBookings }}
+            {{ bookingCount }}
           </p>
         </div>
         <span

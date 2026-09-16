@@ -85,27 +85,24 @@ const visibleOffers = computed(() =>
 
 <template>
   <div class="min-h-screen bg-[#f8f7f4] font-sans text-[#18253d]">
-    <header class="relative overflow-hidden bg-[#07166b] text-white">
-      <div
-        class="absolute -bottom-32 -right-12 h-72 w-72 rounded-full border-[32px] border-amber-300/15"
-        aria-hidden="true"
-      />
-      <div class="relative mx-auto max-w-7xl px-5 py-16 md:px-10 md:py-20">
-        <div class="max-w-2xl">
-          <p
-            class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-200"
-          >
+    <!-- Hero Header with Image Background -->
+    <header class="relative min-h-[480px] w-full bg-cover bg-center text-white" style="background-image: url('https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=2000&q=85');">
+      <!-- Dark Overlay to ensure readability -->
+      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]"></div>
+
+      <div class="relative mx-auto flex min-h-[480px] max-w-7xl flex-col items-center justify-center px-5 py-20 text-center md:px-10">
+        <div class="flex max-w-3xl flex-col items-center">
+          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-amber-200">
             Limited-time escapes
           </p>
-          <h1
-            class="mt-5 text-4xl font-black leading-tight tracking-tight md:text-6xl"
-          >
+          <h1 class="sabay-display mt-5 text-4xl font-black leading-tight tracking-[-0.03em] md:text-6xl drop-shadow-md">
             Make more room for beautiful moments.
           </h1>
-          <p class="mt-5 max-w-xl text-base leading-7 text-white/80">
+          <p class="mt-5 max-w-xl text-base leading-7 text-white/90 drop-shadow">
             Enjoy more of the places you love with exclusive rates, thoughtful
             extras, and stays designed to linger in your memory.
           </p>
+          <div class="mt-6 h-0.5 w-12 bg-emerald-500"></div>
         </div>
       </div>
     </header>

@@ -2,11 +2,52 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admin/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admin/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+    }
+
+    match /user/{userId} {
+      // A signed-in user can read their own profile, which is where the app
+      // stores the role used after login. Admin accounts must be provisioned
+      // separately; clients cannot create or elevate an admin role.
+      allow get: if request.auth != null
+        && (request.auth.uid == userId || isAdmin());
+      allow list: if isAdmin();
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.role == 'user';
+      allow update: if request.auth != null
+        && ((request.auth.uid == userId
+          && request.resource.data.role == resource.data.role) || isAdmin());
+    }
+
+    // Existing administrator profiles are stored in /admin/{uid}.
+    // Only the matching signed-in Firebase account may read its own role.
+    match /admin/{adminId} {
+      allow get: if request.auth != null && request.auth.uid == adminId;
+    }
+
     match /bookings/{bookingId} {
       allow create: if request.auth != null
         && request.resource.data.userId == request.auth.uid;
       allow read, update, delete: if request.auth != null
         && resource.data.userId == request.auth.uid;
+    }
+
+    match /notifications/{notificationId} {
+      allow create: if request.auth != null
+        && request.resource.data.actorId == request.auth.uid;
+      allow read, update, delete: if request.auth != null
+        && (resource.data.recipientId == request.auth.uid || isAdmin());
+    }
+
+    // The admin dashboard manages hotels, rooms, bookings, chats, and users.
+    // Access is granted only after Firebase Authentication and the role lookup
+    // above both succeed.
+    match /{document=**} {
+      allow read, write: if isAdmin();
     }
   }
 }

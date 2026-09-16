@@ -1,35 +1,126 @@
 <script setup lang="ts">
-import { navigateTo } from "nuxt/app";
-import { ref } from "vue";
-import { useAuth } from "~/composables/auth/useAuth";
+import { ref } from 'vue'
+import { signInWithEmailAndPassword, type Auth } from 'firebase/auth'
+import { doc, getDoc, type Firestore } from 'firebase/firestore'
+import { navigateTo, useCookie, useNuxtApp } from '#imports'
+import { useAuth } from '~/composables/auth/useAuth'
 
-const showPassword = ref(false);
-const email = ref("");
-const password = ref("");
-const errorMessage = ref("");
-const { updateUser } = useAuth();
+const email = ref('')
+const password = ref('')
+const showPassword = ref(false)
+const errorMessage = ref('')
+const isLoading = ref(false)
+
+const { updateUser } = useAuth()
+const userRoleCookie = useCookie('user_role', { maxAge: 60 * 60 * 24 * 7 })
 
 const togglePassword = () => {
-  showPassword.value = !showPassword.value;
-};
+  showPassword.value = !showPassword.value
+}
 
-function login() {
-  const savedUser = localStorage.getItem("sabaystay-user");
-  const user = savedUser ? JSON.parse(savedUser) : null;
+const login = async () => {
+  errorMessage.value = ''
 
-  if (
-    !user ||
-    user.email !== email.value.trim() ||
-    user.password !== password.value
-  ) {
-    errorMessage.value =
-      "Email or password is incorrect. Register an account first if needed.";
-    return;
+  if (!email.value.trim() || !password.value) {
+    errorMessage.value = 'Please enter your email and password.'
+    return
   }
 
-  localStorage.setItem("sabaystay-authenticated", "true");
-  updateUser(user);
-  navigateTo("/dashboard");
+  isLoading.value = true
+
+  try {
+    const { $auth, $db } = useNuxtApp()
+
+    if (!$auth || !$db) {
+      throw new Error('Firebase is not configured.')
+    }
+
+    const auth = $auth as Auth
+    const db = $db as Firestore
+
+    const credential = await signInWithEmailAndPassword(
+      auth,
+      email.value.trim(),
+      password.value
+    )
+
+    const uid = credential.user.uid
+
+    const results = await Promise.allSettled([
+      getDoc(doc(db, 'admin', uid)),
+      getDoc(doc(db, 'owner', uid)),
+      getDoc(doc(db, 'user', uid))
+    ])
+
+    const adminDoc = results[0].status === 'fulfilled' ? results[0].value : null
+    const ownerDoc = results[1].status === 'fulfilled' ? results[1].value : null
+    const userDoc = results[2].status === 'fulfilled' ? results[2].value : null
+
+    let profile: Record<string, any> = {
+      id: uid,
+      email: credential.user.email || email.value.trim(),
+      name: credential.user.displayName || 'User Account',
+      role: 'user',
+      permissions: ['read'],
+      avatar: '',
+      phone: '',
+      country: 'Cambodia'
+    }
+
+    if (adminDoc?.exists()) {
+      const data = adminDoc.data()
+      profile = {
+        ...profile,
+        ...data,
+        id: uid,
+        role: data.role === 'super_admin' ? 'super_admin' : 'admin',
+        permissions: data.permissions || ['all']
+      }
+    } else if (ownerDoc?.exists()) {
+      const data = ownerDoc.data()
+      profile = {
+        ...profile,
+        ...data,
+        id: uid,
+        role: 'owner',
+        permissions: data.permissions || ['read']
+      }
+    } else if (userDoc?.exists()) {
+      const data = userDoc.data()
+      profile = {
+        ...profile,
+        ...data,
+        id: uid,
+        role: 'user',
+        permissions: data.permissions || ['read']
+      }
+    }
+
+    updateUser(profile)
+    userRoleCookie.value = profile.role
+
+    if (profile.role === 'admin' || profile.role === 'super_admin') {
+      await navigateTo('/admin')
+    } else if (profile.role === 'owner') {
+      await navigateTo('/Owner/owner_dashboard')
+    } else {
+      await navigateTo('/dashboard')
+    }
+  } catch (error: any) {
+    console.error('Login error:', error)
+
+    if (
+      error?.code === 'auth/invalid-credential' ||
+      error?.code === 'auth/user-not-found' ||
+      error?.code === 'auth/wrong-password'
+    ) {
+      errorMessage.value = 'Email or password is incorrect.'
+    } else {
+      errorMessage.value = error?.message || 'Unable to sign in.'
+    }
+  } finally {
+    isLoading.value = false
+  }
 }
 </script>
 
@@ -39,9 +130,10 @@ function login() {
       class="relative hidden min-h-115 overflow-hidden bg-[#12304c] lg:block"
       aria-label="SabayStay travel inspiration"
     >
+      <!-- High-Resolution Tropical Resort Image -->
       <img
-        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSn68Bu0m0pfUoAVYLc3o3kbdFQGBiMqGdfqmOwteMDKA&s=10"
-        alt="Luxury resort surrounded by tropical mountains"
+        src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?q=80&w=1920&auto=format&fit=crop"
+        alt="Luxury resort swimming pool surrounded by tropical vegetation"
         class="absolute inset-0 h-full w-full object-cover"
       />
       <div class="absolute inset-0 bg-[#061d39]/25" />
@@ -151,9 +243,10 @@ function login() {
 
           <button
             type="submit"
-            class="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#080d70] text-sm font-semibold text-white shadow-sm hover:bg-[#11198e]"
+            :disabled="isLoading"
+            class="flex h-12 w-full items-center justify-center gap-2 rounded-md bg-[#080d70] text-sm font-semibold text-white shadow-sm hover:bg-[#11198e] disabled:opacity-50"
           >
-            Login <span aria-hidden="true">→</span>
+            {{ isLoading ? 'Logging in...' : 'Login' }} <span aria-hidden="true">→</span>
           </button>
           <NuxtLink
             to="/auth/register"

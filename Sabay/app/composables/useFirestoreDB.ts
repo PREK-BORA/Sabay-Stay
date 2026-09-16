@@ -1,3 +1,5 @@
+import { useNuxtApp } from '#imports'
+import type { Firestore } from 'firebase/firestore'
 import { 
   collection, 
   getDocs, 
@@ -11,21 +13,23 @@ import {
 
 export const useFirestoreDB = () => {
   const { $db } = useNuxtApp()
+  const db = $db as Firestore | undefined
 
-  const ensureDb = () => {
-    if (!$db) throw new Error("Firestore instance ($db) is not initialized yet.")
+  const ensureDb = (): Firestore => {
+    if (!db) throw new Error("Firestore instance ($db) is not initialized yet.")
+    return db
   }
 
   // 1. HOTELS COLLECTION
   const getHotels = async () => {
-    ensureDb()
-    const querySnapshot = await getDocs(collection($db, 'hotels'))
+    const firestore = ensureDb()
+    const querySnapshot = await getDocs(collection(firestore, 'hotels'))
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
   }
 
   const addHotel = async (hotelData: any) => {
-    ensureDb()
-    const docRef = await addDoc(collection($db, 'hotels'), {
+    const firestore = ensureDb()
+    const docRef = await addDoc(collection(firestore, 'hotels'), {
       ...hotelData,
       createdAt: new Date().toISOString()
     })
@@ -33,32 +37,32 @@ export const useFirestoreDB = () => {
   }
 
   const updateHotel = async (hotelId: string, hotelData: any) => {
-    ensureDb()
+    const firestore = ensureDb()
     // Guard against trying to update temporary local IDs
     if (!hotelId || hotelId.startsWith('temp-')) return
-    const hotelRef = doc($db, 'hotels', hotelId)
+    const hotelRef = doc(firestore, 'hotels', hotelId)
     await updateDoc(hotelRef, hotelData)
   }
 
   const deleteHotel = async (hotelId: string) => {
-    ensureDb()
+    const firestore = ensureDb()
     // Guard against trying to delete temporary local IDs
     if (!hotelId || hotelId.startsWith('temp-')) return
-    const docRef = doc($db, 'hotels', hotelId)
+    const docRef = doc(firestore, 'hotels', hotelId)
     await deleteDoc(docRef)
   }
 
   // 2. ROOM COLLECTION
   const getRoomsByHotel = async (hotelId: string) => {
-    ensureDb()
-    const q = query(collection($db, 'room'), where('hotelId', '==', hotelId))
+    const firestore = ensureDb()
+    const q = query(collection(firestore, 'room'), where('hotelId', '==', hotelId))
     const querySnapshot = await getDocs(q)
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
   }
 
   const addRoom = async (hotelId: string, roomData: any) => {
-    ensureDb()
-    const docRef = await addDoc(collection($db, 'room'), {
+    const firestore = ensureDb()
+    const docRef = await addDoc(collection(firestore, 'room'), {
       hotelId: hotelId || 'default',
       ...roomData,
       createdAt: new Date().toISOString()
@@ -67,23 +71,23 @@ export const useFirestoreDB = () => {
   }
 
   const updateRoom = async (roomId: string, roomData: any) => {
-    ensureDb()
+    const firestore = ensureDb()
     if (!roomId || roomId.startsWith('temp-')) return
-    const roomRef = doc($db, 'room', roomId)
+    const roomRef = doc(firestore, 'room', roomId)
     await updateDoc(roomRef, roomData)
   }
 
   const deleteRoom = async (roomId: string) => {
-    ensureDb()
+    const firestore = ensureDb()
     if (!roomId || roomId.startsWith('temp-')) return
-    const docRef = doc($db, 'room', roomId)
+    const docRef = doc(firestore, 'room', roomId)
     await deleteDoc(docRef)
   }
 
   // 3. BOOKINGS COLLECTION
   const createBooking = async (bookingData: any) => {
-    ensureDb()
-    const docRef = await addDoc(collection($db, 'bookings'), {
+    const firestore = ensureDb()
+    const docRef = await addDoc(collection(firestore, 'bookings'), {
       ...bookingData,
       status: 'confirmed',
       createdAt: new Date().toISOString()
@@ -92,23 +96,23 @@ export const useFirestoreDB = () => {
   }
 
   const getBookingsByGuest = async (email: string) => {
-    ensureDb()
-    const q = query(collection($db, 'bookings'), where('guestEmail', '==', email))
+    const firestore = ensureDb()
+    const q = query(collection(firestore, 'bookings'), where('guestEmail', '==', email))
     const querySnapshot = await getDocs(q)
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
   }
 
   // 4. REVIEWS COLLECTION
   const getReviewsByHotel = async (hotelId: string) => {
-    ensureDb()
-    const q = query(collection($db, 'reviews'), where('hotelId', '==', hotelId))
+    const firestore = ensureDb()
+    const q = query(collection(firestore, 'reviews'), where('hotelId', '==', hotelId))
     const querySnapshot = await getDocs(q)
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
   }
 
   const addReview = async (hotelId: string, reviewData: any) => {
-    ensureDb()
-    const docRef = await addDoc(collection($db, 'reviews'), {
+    const firestore = ensureDb()
+    const docRef = await addDoc(collection(firestore, 'reviews'), {
       hotelId,
       ...reviewData,
       createdAt: new Date().toISOString()

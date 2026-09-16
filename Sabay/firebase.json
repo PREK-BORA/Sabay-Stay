@@ -1,6 +1,6 @@
 {
   "projects": {
-    "default": "sabay-stay"
+    "default": "sabay-stay-ba3d1"
   },
   "firestore": {
     "rules": "firestore.rules"

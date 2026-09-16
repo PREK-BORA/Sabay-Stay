@@ -1,26 +1,28 @@
 <template>
   <div class="p-8 max-w-6xl mx-auto space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 class="text-3xl font-serif font-bold text-gray-900">My Properties</h1>
         <p class="text-xs text-gray-500 mt-1">Manage your registered hotels, villas, and apartments.</p>
       </div>
       <button 
         @click="openModal()" 
-        class="px-4 py-2.5 text-sm font-medium bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition shadow-xs"
+        class="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition shadow-xs self-start sm:self-auto"
       >
-        + Add New Property
+        <Plus class="w-4 h-4" />
+        Add New Property
       </button>
     </div>
 
     <!-- Search Input -->
-    <div class="max-w-md">
+    <div class="max-w-md relative">
+      <Search class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
       <input 
         v-model="searchQuery"
         type="text"
         placeholder="Search properties by name or location..."
-        class="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-950 transition shadow-xs"
+        class="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition shadow-xs"
       />
     </div>
 
@@ -33,7 +35,7 @@
       </div>
     </div>
 
-    <!-- Clean Property Grid -->
+    <!-- Property Grid -->
     <div v-else-if="filteredHotels.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <div 
         v-for="hotel in filteredHotels" 
@@ -42,41 +44,47 @@
         @click="navigateToDetail(hotel.id)"
       >
         <div>
-          <div class="h-48 bg-gray-200 relative overflow-hidden">
+          <div class="h-48 bg-gray-100 relative overflow-hidden">
             <img 
-              :src="hotel.image || fallbackImage" 
-              :alt="hotel.name" 
-              @error="handleImageError"
+              :src="getHotelImageUrl(hotel.image)" 
+              :alt="hotel.name"
+              loading="lazy"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
             />
-            <span class="absolute top-3 right-3 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-xs font-bold text-gray-800">
-              Rate: ★ {{ hotel.rating || '5.0' }}
+            <span class="absolute top-3 right-3 flex items-center gap-1 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-full text-xs font-bold text-gray-800 shadow-xs border border-gray-100">
+              <Star class="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
+              {{ hotel.rating || '5.0' }}
             </span>
           </div>
           <div class="p-5">
-            <span class="text-[10px] font-bold text-indigo-950 uppercase tracking-wider block mb-1">
+            <span class="flex items-center gap-1 text-[10px] font-bold text-indigo-950 uppercase tracking-wider mb-1">
+              <MapPin class="w-3 h-3 text-indigo-800" />
               City: {{ hotel.city || hotel.location || 'Unspecified Location' }}
             </span>
             <h2 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-indigo-900 transition-colors">
               {{ hotel.name }}
             </h2>
-            <p class="text-xs text-gray-500 line-clamp-2">{{ hotel.description || 'No description provided.' }}</p>
+            <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+              {{ hotel.description || 'No description provided.' }}
+            </p>
           </div>
         </div>
 
         <div class="p-5 pt-3 border-t border-gray-50 flex items-center justify-between mt-auto">
-          <span class="text-xs font-semibold text-gray-400">View Details</span>
-          <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-gray-400 group-hover:text-indigo-950 transition-colors">View Details →</span>
+          <div class="flex items-center gap-2" @click.stop>
             <button 
-              @click.stop="openEditModal(hotel)" 
-              class="px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition"
+              @click="openEditModal(hotel)" 
+              class="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-amber-700 bg-amber-50 rounded-lg hover:bg-amber-100 transition"
             >
+              <Pencil class="w-3 h-3" />
               Edit
             </button>
             <button 
-              @click.stop="handleDelete(hotel.id)" 
-              class="px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition"
+              @click="handleDelete(hotel.id)" 
+              class="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition"
             >
+              <Trash2 class="w-3 h-3" />
               Delete
             </button>
           </div>
@@ -85,21 +93,35 @@
     </div>
 
     <!-- Empty State -->
-    <div v-else class="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-xs">
-      <p class="text-gray-500 text-sm mb-4">
+    <div v-else class="text-center py-16 bg-white rounded-2xl border border-gray-100 shadow-xs flex flex-col items-center justify-center">
+      <Building2 class="w-12 h-12 text-gray-300 mb-3" />
+      <p class="text-gray-500 text-sm mb-4 font-medium">
         {{ searchQuery ? 'No properties matching your search.' : 'No properties listed yet.' }}
       </p>
-      <button @click="openModal()" class="px-4 py-2 text-xs font-semibold bg-indigo-950 text-white rounded-xl">
+      <button 
+        @click="openModal()" 
+        class="flex items-center gap-2 px-4 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition"
+      >
+        <Plus class="w-3.5 h-3.5" />
         Add Your First Hotel
       </button>
     </div>
 
     <!-- Add Property Modal -->
-    <div v-if="showAddModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div 
+      v-if="showAddModal" 
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4"
+      @click.self="closeModal"
+    >
       <div class="bg-white rounded-2xl border border-gray-100 shadow-2xl max-w-xl w-full p-6 space-y-5">
         <div class="flex justify-between items-center border-b border-gray-100 pb-4">
-          <h2 class="text-xl font-serif font-bold text-gray-900">Add New Property</h2>
-          <button @click="closeModal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+          <h2 class="text-xl font-serif font-bold text-gray-900 flex items-center gap-2">
+            <Building2 class="w-5 h-5 text-indigo-950" />
+            Add New Property
+          </h2>
+          <button @click="closeModal" class="text-gray-400 hover:text-gray-600">
+            <X class="w-5 h-5" />
+          </button>
         </div>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -110,17 +132,20 @@
               type="text" 
               required 
               placeholder="e.g. Sunset Boutique Hotel"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition" 
             />
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">City / Location</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 flex items-center gap-1.5">
+              <MapPin class="w-3.5 h-3.5 text-gray-400" />
+              City / Location
+            </label>
             <input 
               v-model="form.city" 
               type="text" 
               required 
               placeholder="e.g. Siem Reap"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition" 
             />
           </div>
           <div>
@@ -129,22 +154,30 @@
               v-model="form.description" 
               rows="3" 
               placeholder="Tell guests about the vibe, amenities, and what makes this property special..."
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition"
             ></textarea>
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cover Image URL</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 flex items-center gap-1.5">
+              <UploadCloud class="w-3.5 h-3.5 text-gray-400" />
+              Cover Image URL
+            </label>
             <input 
               v-model="form.image" 
               type="url" 
               placeholder="https://example.com/your-hotel-photo.jpg"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition" 
             />
             <p class="text-[11px] text-gray-400 mt-1">Leave blank to use a default cover image.</p>
           </div>
-          <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
-            <button type="button" @click="closeModal" class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl">Cancel</button>
-            <button type="submit" :disabled="isSubmitting" class="px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl">
+          <div class="flex justify-end gap-2 pt-4 border-t border-gray-100">
+            <button type="button" @click="closeModal" class="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+              <X class="w-3.5 h-3.5" />
+              Cancel
+            </button>
+            <button type="submit" :disabled="isSubmitting" class="flex items-center gap-2 px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition disabled:opacity-60 shadow-xs">
+              <Loader2 v-if="isSubmitting" class="w-3.5 h-3.5 animate-spin" />
+              <Save v-else class="w-3.5 h-3.5" />
               {{ isSubmitting ? 'Saving...' : 'Save Property' }}
             </button>
           </div>
@@ -153,11 +186,20 @@
     </div>
 
     <!-- Edit Property Modal -->
-    <div v-if="showEditModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4" @click.self="closeEditModal">
+    <div 
+      v-if="showEditModal" 
+      class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4" 
+      @click.self="closeEditModal"
+    >
       <div class="bg-white rounded-2xl border border-gray-100 shadow-2xl max-w-xl w-full p-6 space-y-5">
         <div class="flex justify-between items-center border-b border-gray-100 pb-4">
-          <h2 class="text-xl font-serif font-bold text-gray-900">Edit Property Details</h2>
-          <button @click="closeEditModal" class="text-gray-400 hover:text-gray-600 text-lg">✕</button>
+          <h2 class="text-xl font-serif font-bold text-gray-900 flex items-center gap-2">
+            <Pencil class="w-5 h-5 text-indigo-950" />
+            Edit Property Details
+          </h2>
+          <button @click="closeEditModal" class="text-gray-400 hover:text-gray-600">
+            <X class="w-5 h-5" />
+          </button>
         </div>
 
         <form @submit.prevent="handleUpdate" class="space-y-4">
@@ -168,17 +210,20 @@
               type="text" 
               required 
               placeholder="e.g. Sunset Boutique Hotel"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition" 
             />
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">City / Location</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 flex items-center gap-1.5">
+              <MapPin class="w-3.5 h-3.5 text-gray-400" />
+              City / Location
+            </label>
             <input 
               v-model="editForm.city" 
               type="text" 
               required 
               placeholder="e.g. Siem Reap"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition" 
             />
           </div>
           <div>
@@ -187,22 +232,30 @@
               v-model="editForm.description" 
               rows="3" 
               placeholder="Tell guests about the vibe, amenities, and what makes this property special..."
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition"
             ></textarea>
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cover Image URL</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 flex items-center gap-1.5">
+              <UploadCloud class="w-3.5 h-3.5 text-gray-400" />
+              Cover Image URL
+            </label>
             <input 
               v-model="editForm.image" 
               type="url" 
               placeholder="https://example.com/your-hotel-photo.jpg"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition" 
             />
             <p class="text-[11px] text-gray-400 mt-1">Leave blank to use a default cover image.</p>
           </div>
-          <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
-            <button type="button" @click="closeEditModal" class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl">Cancel</button>
-            <button type="submit" :disabled="isUpdating" class="px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl">
+          <div class="flex justify-end gap-2 pt-4 border-t border-gray-100">
+            <button type="button" @click="closeEditModal" class="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200 transition">
+              <X class="w-3.5 h-3.5" />
+              Cancel
+            </button>
+            <button type="submit" :disabled="isUpdating" class="flex items-center gap-2 px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition disabled:opacity-60 shadow-xs">
+              <Loader2 v-if="isUpdating" class="w-3.5 h-3.5 animate-spin" />
+              <Save v-else class="w-3.5 h-3.5" />
               {{ isUpdating ? 'Saving...' : 'Update Property' }}
             </button>
           </div>
@@ -214,6 +267,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { Plus, Search, Star, MapPin, Pencil, Trash2, Building2, X, UploadCloud, Save, Loader2 } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'owner' })
 const router = useRouter()
@@ -222,6 +276,7 @@ const { getHotels, addHotel, updateHotel, deleteHotel } = useFirestoreDB()
 const hotels = ref([])
 const loading = ref(true)
 const searchQuery = ref('')
+
 const showAddModal = ref(false)
 const isSubmitting = ref(false)
 
@@ -230,9 +285,16 @@ const isUpdating = ref(false)
 const editingId = ref(null)
 const editForm = ref({ name: '', city: '', description: '', image: '' })
 
-const fallbackImage = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80'
+const fallbackImageUrl = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80'
 const initialForm = { name: '', city: '', description: '', image: '' }
 const form = ref({ ...initialForm })
+
+const getHotelImageUrl = (imageUrl) => {
+  if (imageUrl?.trim()) {
+    return imageUrl
+  }
+  return fallbackImageUrl
+}
 
 const navigateToDetail = (id) => {
   router.push(`/owner/my_hotels/${id}`)
@@ -242,10 +304,6 @@ const saveLocalHotels = (data) => {
   if (import.meta.client) {
     localStorage.setItem('sabay_hotels_cache', JSON.stringify(data))
   }
-}
-
-const handleImageError = (e) => {
-  if (e.target.src !== fallbackImage) e.target.src = fallbackImage
 }
 
 const filteredHotels = computed(() => {
@@ -288,7 +346,9 @@ const loadHotels = async () => {
       try {
         hotels.value = JSON.parse(cached)
         loading.value = false
-      } catch (e) { console.error(e) }
+      } catch (e) { 
+        console.error(e) 
+      }
     }
   }
   try {
@@ -312,7 +372,7 @@ const handleUpdate = async () => {
     name: editForm.value.name,
     city: editForm.value.city,
     description: editForm.value.description || '',
-    image: editForm.value.image?.trim() ? editForm.value.image : fallbackImage
+    image: editForm.value.image?.trim() ? editForm.value.image : ''
   }
 
   const idx = hotels.value.findIndex(h => h.id === editingId.value)
@@ -354,7 +414,7 @@ const handleSubmit = async () => {
     name: form.value.name,
     city: form.value.city,
     description: form.value.description || '',
-    image: form.value.image?.trim() ? form.value.image : fallbackImage
+    image: form.value.image?.trim() ? form.value.image : ''
   }
 
   const tempId = 'temp-' + Date.now()
@@ -377,5 +437,7 @@ const handleSubmit = async () => {
   }
 }
 
-onMounted(() => { loadHotels() })
+onMounted(() => { 
+  loadHotels() 
+})
 </script>

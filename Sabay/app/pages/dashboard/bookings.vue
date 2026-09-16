@@ -3,8 +3,28 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useAuth } from "~/composables/auth/useAuth";
-import { useNuxtApp } from "nuxt/app";
-
+import { getHotelById } from "~/data/hotels";
+import { useNuxtApp, definePageMeta } from "#imports";
+import {
+  Calendar,
+  MapPin,
+  Star,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Eye,
+  X,
+  BedDouble,
+  Users,
+  User,
+  Mail,
+  Phone,
+  Receipt,
+  Download,
+  Ban,
+  Loader2,
+  Building2
+} from "lucide-vue-next";
 
 definePageMeta({ layout: "user", middleware: "auth" });
 
@@ -96,12 +116,12 @@ async function loadBookings() {
       return {
         id: bookingDoc.id,
         property: String(data.hotelName || hotel?.name || "SabayStay property"),
-        location: hotel ? hotel.location : "Your saved hotel booking",
+        location: String(data.location || hotel?.location || "Your saved hotel booking"),
         dates: `${checkIn} - ${checkOut}`,
         status: (status.charAt(0).toUpperCase() +
           status.slice(1)) as Booking["status"],
         total: `$${Number(data.total || 0).toLocaleString()}`,
-        image: hotel?.image || "",
+        image: String(data.image || hotel?.image || ""),
         rating: hotel ? `${hotel.rating} / 5` : "Not rated",
         roomType: String(data.roomName || "Room"),
         guests: Number(data.guests || 1),
@@ -190,7 +210,7 @@ function downloadConfirmation() {
   ].join("\n");
   const link = document.createElement("a");
   link.href = URL.createObjectURL(
-    new Blob([confirmation], { type: "text/plain" }),
+    new Blob([confirmation], { type: "text/plain;charset=utf-8" }),
   );
   link.download = `${booking.id}-confirmation.txt`;
   link.click();
@@ -201,39 +221,53 @@ function downloadConfirmation() {
 <template>
   <div class="space-y-6">
     <div>
-      <h1 class="text-3xl font-bold text-[#1d2f52]">Bookings</h1>
-      <p class="mt-1 text-sm text-[#65728a]">
+      <h1 class="text-3xl font-bold text-slate-900">Bookings</h1>
+      <p class="mt-1 text-sm text-slate-500">
         Manage your upcoming stays and travel plans.
       </p>
     </div>
-    <div v-if="isLoading" class="text-sm text-[#65728a]">
+
+    <!-- Loading State -->
+    <div v-if="isLoading" class="flex items-center gap-2 text-sm text-slate-500">
+      <Loader2 class="h-4 w-4 animate-spin text-[#07166b]" />
       Loading bookings...
     </div>
-    <div v-else-if="bookingError" class="text-sm text-red-600">
+
+    <!-- Error State -->
+    <div v-else-if="bookingError" class="text-sm font-medium text-red-600">
       {{ bookingError }}
     </div>
+
+    <!-- Bookings List -->
     <div v-else class="space-y-4">
       <article
         v-for="booking in bookings"
         :key="booking.id"
-        class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-200"
+        class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-200/50 transition hover:shadow-md"
       >
         <div class="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p
-              class="text-xs font-semibold uppercase tracking-[0.2em] text-[#65728a]"
-            >
+            <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
               {{ booking.id }}
             </p>
-            <h2 class="mt-1 text-lg font-bold text-[#0d224a]">
+            <h2 class="mt-1 text-lg font-bold text-slate-900">
               {{ booking.property }}
             </h2>
-            <p class="text-sm text-[#53637c]">
-              {{ booking.location }} · {{ booking.dates }}
-            </p>
+            <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+              <span class="inline-flex items-center gap-1">
+                <MapPin class="h-3.5 w-3.5 text-slate-400" />
+                {{ booking.location }}
+              </span>
+              <span>•</span>
+              <span class="inline-flex items-center gap-1">
+                <Calendar class="h-3.5 w-3.5 text-slate-400" />
+                {{ booking.dates }}
+              </span>
+            </div>
           </div>
+
           <span
-            class="rounded-full px-3 py-1 text-xs font-semibold"
+            class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
             :class="
               getDisplayStatus(booking) === 'Cancelled'
                 ? 'bg-red-100 text-red-700'
@@ -242,50 +276,59 @@ function downloadConfirmation() {
                   : 'bg-emerald-100 text-emerald-700'
             "
           >
+            <XCircle v-if="getDisplayStatus(booking) === 'Cancelled'" class="h-3.5 w-3.5" />
+            <Clock v-else-if="getDisplayStatus(booking) === 'Pending'" class="h-3.5 w-3.5" />
+            <CheckCircle2 v-else class="h-3.5 w-3.5" />
             {{ getDisplayStatus(booking) }}
           </span>
         </div>
+
         <div
-          class="mt-5 flex justify-between border-t border-slate-200 pt-4 text-sm"
+          class="mt-5 flex items-center justify-between border-t border-slate-100 pt-4 text-sm"
         >
           <div>
-            <span class="text-[#65728a]">Total</span>
-            <strong class="ml-2 text-[#087d72]">{{ booking.total }}</strong>
+            <span class="text-slate-500">Total</span>
+            <strong class="ml-2 text-base font-bold text-[#07166b]">{{ booking.total }}</strong>
           </div>
           <button
             type="button"
-            class="font-semibold text-[#087d72] hover:text-[#0d224a]"
+            class="inline-flex items-center gap-1.5 font-semibold text-[#07166b] transition hover:text-indigo-800"
             @click="openDetails(booking)"
           >
-            View Details
+            <Eye class="h-4 w-4" />
+            <span>View Details</span>
           </button>
         </div>
-       </article>
-       <div
-         v-if="bookings.length === 0"
-         class="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm"
-       >
-         <p class="text-sm text-[#65728a]">You have no bookings yet.</p>
-       </div>
-     </div>
+      </article>
 
+      <!-- Empty State -->
+      <div
+        v-if="bookings.length === 0"
+        class="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm"
+      >
+        <Building2 class="mx-auto h-10 w-10 text-slate-300" />
+        <p class="mt-3 text-sm font-medium text-slate-600">You have no bookings yet.</p>
+      </div>
+    </div>
+
+    <!-- Modal Dialog -->
     <div
       v-if="selectedBooking"
-      class="fixed inset-0 z-50 overflow-y-auto bg-[#07182b]/50 p-4 sm:p-8"
+      class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-4 sm:p-8 backdrop-blur-sm"
       @click.self="closeDetails"
     >
       <section
-        class="mx-auto max-w-4xl overflow-hidden rounded-3xl bg-[#f7f6f2] shadow-2xl"
+        class="my-8 w-full max-w-4xl overflow-hidden rounded-3xl bg-slate-50 shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-details-title"
       >
         <div
-          class="flex items-start justify-between gap-5 bg-[#0d224a] px-6 py-6 text-white sm:px-8"
+          class="flex items-start justify-between gap-5 bg-[#07166b] px-6 py-6 text-white sm:px-8"
         >
           <div>
             <p
-              class="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300"
+              class="text-xs font-semibold uppercase tracking-wider text-indigo-200"
             >
               Booking Details
             </p>
@@ -295,27 +338,27 @@ function downloadConfirmation() {
             >
               {{ selectedBooking.property }}
             </h2>
-            <p class="mt-1 text-sm text-white/70">{{ selectedBooking.id }}</p>
+            <p class="mt-1 text-xs text-indigo-100/70">{{ selectedBooking.id }}</p>
           </div>
           <button
             type="button"
-            class="rounded-full bg-white/10 px-3 py-1 text-2xl text-white hover:bg-white/20"
+            class="rounded-full bg-white/10 p-1.5 text-white transition hover:bg-white/20"
             aria-label="Close booking details"
             @click="closeDetails"
           >
-            ×
+            <X class="h-5 w-5" />
           </button>
         </div>
 
         <div class="space-y-5 p-5 sm:p-8">
           <div
-            class="flex flex-wrap items-center gap-3 border-b border-slate-200 pb-5 text-sm"
+            class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-5 text-sm"
           >
-            <span class="font-semibold text-[#53637c]"
+            <span class="font-semibold text-slate-600"
               >Booking ID: {{ selectedBooking.id }}</span
             >
             <span
-              class="rounded-full px-3 py-1 text-xs font-semibold"
+              class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
               :class="
                 getDisplayStatus(selectedBooking) === 'Cancelled'
                   ? 'bg-red-100 text-red-700'
@@ -324,12 +367,16 @@ function downloadConfirmation() {
                     : 'bg-emerald-100 text-emerald-700'
               "
             >
+              <XCircle v-if="getDisplayStatus(selectedBooking) === 'Cancelled'" class="h-3.5 w-3.5" />
+              <Clock v-else-if="getDisplayStatus(selectedBooking) === 'Pending'" class="h-3.5 w-3.5" />
+              <CheckCircle2 v-else class="h-3.5 w-3.5" />
               {{ getDisplayStatus(selectedBooking) }}
             </span>
           </div>
 
+          <!-- Hotel Info Card -->
           <section
-            class="grid gap-5 rounded-2xl bg-white p-4 shadow-sm sm:grid-cols-[180px_1fr]"
+            class="grid gap-5 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm sm:grid-cols-[180px_1fr]"
           >
             <img
               :src="selectedBooking.image"
@@ -337,69 +384,81 @@ function downloadConfirmation() {
               class="h-36 w-full rounded-xl object-cover sm:h-full"
             />
             <div>
-              <h3 class="text-lg font-bold text-[#0d224a]">
+              <p class="text-xs font-semibold uppercase tracking-wider text-[#07166b]">
                 Hotel Information
-              </h3>
-              <p class="mt-2 text-base font-semibold text-[#1d2f52]">
+              </p>
+              <p class="mt-1 text-lg font-bold text-slate-900">
                 {{ selectedBooking.property }}
               </p>
-              <p class="mt-1 text-sm text-[#53637c]">
+              <p class="mt-1 flex items-center gap-1 text-sm text-slate-500">
+                <MapPin class="h-4 w-4 text-slate-400" />
                 {{ selectedBooking.location }}
               </p>
-              <p class="mt-2 text-sm font-semibold text-amber-600">
-                ★ {{ selectedBooking.rating }}
+              <p class="mt-2 flex items-center gap-1 text-sm font-semibold text-amber-600">
+                <Star class="h-4 w-4 fill-amber-400 text-amber-400" />
+                {{ selectedBooking.rating }}
               </p>
             </div>
           </section>
 
           <div class="grid gap-5 md:grid-cols-2">
-            <section class="rounded-2xl bg-white p-5 shadow-sm">
-              <h3 class="font-bold text-[#0d224a]">Room Information</h3>
+            <!-- Room Information -->
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+              <div class="flex items-center gap-2">
+                <BedDouble class="h-5 w-5 text-[#07166b]" />
+                <h3 class="font-bold text-slate-900">Room Information</h3>
+              </div>
               <dl class="mt-4 space-y-3 text-sm">
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#65728a]">Room Type</dt>
-                  <dd class="font-semibold text-right text-[#1d2f52]">
+                  <dt class="text-slate-500">Room Type</dt>
+                  <dd class="text-right font-semibold text-slate-900">
                     {{ selectedBooking.roomType }}
                   </dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#65728a]">Guests</dt>
-                  <dd class="font-semibold text-[#1d2f52]">
+                  <dt class="text-slate-500">Guests</dt>
+                  <dd class="flex items-center gap-1 font-semibold text-slate-900">
+                    <Users class="h-3.5 w-3.5 text-slate-400" />
                     {{ selectedBooking.guests }}
                   </dd>
                 </div>
                 <div>
-                  <dt class="text-[#65728a]">Facilities</dt>
+                  <dt class="text-slate-500">Facilities</dt>
                   <dd class="mt-2 flex flex-wrap gap-2">
                     <span
                       v-for="facility in selectedBooking.facilities"
                       :key="facility"
-                      class="rounded-full bg-[#e5f0ed] px-2.5 py-1 text-xs text-[#087d72]"
-                      >{{ facility }}</span
+                      class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
                     >
+                      {{ facility }}
+                    </span>
                   </dd>
                 </div>
               </dl>
             </section>
 
-            <section class="rounded-2xl bg-white p-5 shadow-sm">
-              <h3 class="font-bold text-[#0d224a]">Stay Information</h3>
+            <!-- Stay Information -->
+            <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+              <div class="flex items-center gap-2">
+                <Calendar class="h-5 w-5 text-[#07166b]" />
+                <h3 class="font-bold text-slate-900">Stay Information</h3>
+              </div>
               <dl class="mt-4 space-y-3 text-sm">
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#65728a]">Check-in</dt>
-                  <dd class="font-semibold text-right text-[#1d2f52]">
+                  <dt class="text-slate-500">Check-in</dt>
+                  <dd class="text-right font-semibold text-slate-900">
                     {{ selectedBooking.checkIn }}
                   </dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#65728a]">Check-out</dt>
-                  <dd class="font-semibold text-right text-[#1d2f52]">
+                  <dt class="text-slate-500">Check-out</dt>
+                  <dd class="text-right font-semibold text-slate-900">
                     {{ selectedBooking.checkOut }}
                   </dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-[#65728a]">Number of Nights</dt>
-                  <dd class="font-semibold text-[#1d2f52]">
+                  <dt class="text-slate-500">Number of Nights</dt>
+                  <dd class="font-semibold text-slate-900">
                     {{ selectedBooking.nights }}
                   </dd>
                 </div>
@@ -407,51 +466,68 @@ function downloadConfirmation() {
             </section>
           </div>
 
-          <section class="rounded-2xl bg-white p-5 shadow-sm">
-            <h3 class="font-bold text-[#0d224a]">Guest Information</h3>
+          <!-- Guest Information -->
+          <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-2">
+              <User class="h-5 w-5 text-[#07166b]" />
+              <h3 class="font-bold text-slate-900">Guest Information</h3>
+            </div>
             <div class="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-              <div>
-                <p class="text-[#65728a]">Name</p>
-                <p class="mt-1 font-semibold text-[#1d2f52]">{{ guestName }}</p>
+              <div class="rounded-xl border border-slate-200/60 bg-slate-50 p-3">
+                <p class="flex items-center gap-1 text-xs uppercase tracking-wider text-slate-400">
+                  <User class="h-3.5 w-3.5" />
+                  Name
+                </p>
+                <p class="mt-1 font-semibold text-slate-900">{{ guestName }}</p>
               </div>
-              <div>
-                <p class="text-[#65728a]">Email</p>
-                <p class="mt-1 break-all font-semibold text-[#1d2f52]">
+              <div class="rounded-xl border border-slate-200/60 bg-slate-50 p-3">
+                <p class="flex items-center gap-1 text-xs uppercase tracking-wider text-slate-400">
+                  <Mail class="h-3.5 w-3.5" />
+                  Email
+                </p>
+                <p class="mt-1 break-all font-semibold text-slate-900">
                   {{ guestEmail }}
                 </p>
               </div>
-              <div>
-                <p class="text-[#65728a]">Phone</p>
-                <p class="mt-1 font-semibold text-[#1d2f52]">
+              <div class="rounded-xl border border-slate-200/60 bg-slate-50 p-3">
+                <p class="flex items-center gap-1 text-xs uppercase tracking-wider text-slate-400">
+                  <Phone class="h-3.5 w-3.5" />
+                  Phone
+                </p>
+                <p class="mt-1 font-semibold text-slate-900">
                   {{ guestPhone }}
                 </p>
               </div>
             </div>
           </section>
 
-          <section class="rounded-2xl bg-white p-5 shadow-sm">
-            <h3 class="font-bold text-[#0d224a]">Price Summary</h3>
+          <!-- Price Summary -->
+          <section class="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+            <div class="flex items-center gap-2">
+              <Receipt class="h-5 w-5 text-[#07166b]" />
+              <h3 class="font-bold text-slate-900">Price Summary</h3>
+            </div>
             <dl class="mt-4 space-y-3 text-sm">
               <div class="flex justify-between">
-                <dt class="text-[#65728a]">Room Price</dt>
-                <dd>${{ selectedBooking.roomPrice.toLocaleString() }}</dd>
+                <dt class="text-slate-500">Room Price</dt>
+                <dd class="font-medium text-slate-900">${{ selectedBooking.roomPrice.toLocaleString() }}</dd>
               </div>
               <div class="flex justify-between">
-                <dt class="text-[#65728a]">Number of Nights</dt>
-                <dd>{{ selectedBooking.nights }}</dd>
+                <dt class="text-slate-500">Number of Nights</dt>
+                <dd class="font-medium text-slate-900">{{ selectedBooking.nights }}</dd>
               </div>
               <div class="flex justify-between">
-                <dt class="text-[#65728a]">Taxes / Fees</dt>
-                <dd>${{ selectedBooking.taxes.toLocaleString() }}</dd>
+                <dt class="text-slate-500">Taxes / Fees</dt>
+                <dd class="font-medium text-slate-900">${{ selectedBooking.taxes.toLocaleString() }}</dd>
               </div>
               <div class="flex justify-between">
-                <dt class="text-[#65728a]">Discount</dt>
-                <dd class="text-emerald-700">
+                <dt class="text-slate-500">Discount</dt>
+                <dd class="font-medium text-emerald-700">
                   -${{ selectedBooking.discount.toLocaleString() }}
                 </dd>
               </div>
               <div
-                class="flex justify-between border-t border-slate-200 pt-3 text-base font-bold text-[#0d224a]"
+                class="flex justify-between border-t border-slate-200 pt-3 text-base font-bold text-slate-900"
               >
                 <dt>Total</dt>
                 <dd>{{ selectedBooking.total }}</dd>
@@ -459,23 +535,26 @@ function downloadConfirmation() {
             </dl>
           </section>
 
+          <!-- Actions -->
           <div
             class="flex flex-col-reverse justify-end gap-3 border-t border-slate-200 pt-5 sm:flex-row"
           >
             <button
               type="button"
-              class="rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+              class="inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="getDisplayStatus(selectedBooking) === 'Cancelled'"
               @click="cancelBooking"
             >
-              Cancel Booking
+              <Ban class="h-4 w-4" />
+              <span>Cancel Booking</span>
             </button>
             <button
               type="button"
-              class="rounded-xl bg-[#0d224a] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[#0a1d3d]"
+              class="inline-flex items-center justify-center gap-2 rounded-xl bg-[#07166b] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-900"
               @click="downloadConfirmation"
             >
-              Download Confirmation
+              <Download class="h-4 w-4" />
+              <span>Download Confirmation</span>
             </button>
           </div>
         </div>

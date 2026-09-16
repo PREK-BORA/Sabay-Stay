@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { collection, deleteDoc, doc, onSnapshot, query, updateDoc, where } from "firebase/firestore";
+import { definePageMeta, useNuxtApp } from "#imports";
+import { useAuth } from "~/composables/auth/useAuth";
 
 definePageMeta({ middleware: "auth" });
 
@@ -7,7 +10,7 @@ type NotificationType = "booking" | "system" | "promo";
 type NotificationFilter = "all" | NotificationType;
 
 interface UserNotification {
-  id: number;
+  id: string;
   title: string;
   message: string;
   time: string;
@@ -17,44 +20,11 @@ interface UserNotification {
 
 const filters: NotificationFilter[] = ["all", "booking", "promo", "system"];
 
-const notifications = ref<UserNotification[]>([
-  {
-    id: 1,
-    title: "Booking Confirmed!",
-    message:
-      "Your reservation at The Luxury Resort has been confirmed successfully. Check your itinerary and arrival details before your trip.",
-    time: "2 hours ago",
-    type: "booking",
-    isRead: false,
-  },
-  {
-    id: 2,
-    title: "Special Offer Available",
-    message:
-      "Save 20% on your next stay in Phnom Penh with this exclusive seasonal offer.",
-    time: "1 day ago",
-    type: "promo",
-    isRead: false,
-  },
-  {
-    id: 3,
-    title: "Account Settings Updated",
-    message:
-      "Your profile information has been saved. Your preferences are now synced across all devices.",
-    time: "3 days ago",
-    type: "system",
-    isRead: true,
-  },
-  {
-    id: 4,
-    title: "Trip Reminder",
-    message:
-      "Your stay starts in 3 days. Don’t forget to confirm your check-in time with the property.",
-    time: "5 days ago",
-    type: "booking",
-    isRead: true,
-  },
-]);
+const { user } = useAuth();
+const { $db } = useNuxtApp() as any;
+const notifications = ref<UserNotification[]>([]);
+const loading = ref(true);
+let unsubscribe = () => {};
 
 const selectedNotification = ref<UserNotification | null>(null);
 const activeFilter = ref<NotificationFilter>("all");
@@ -102,30 +72,53 @@ const typeMeta = {
   },
 } as const;
 
-const markAsRead = (id: number) => {
+const markAsRead = async (id: string) => {
   const item = notifications.value.find(
     (notification) => notification.id === id,
   );
 
-  if (item) item.isRead = true;
+  if (item && !item.isRead && $db) await updateDoc(doc($db, "notifications", id), { isRead: true });
 };
 
-const markAllAsRead = () => {
-  notifications.value.forEach((item) => (item.isRead = true));
+const markAllAsRead = async () => {
+  if (!$db) return;
+  await Promise.all(notifications.value.filter((item) => !item.isRead).map((item) => updateDoc(doc($db, "notifications", item.id), { isRead: true })));
 };
 
-const removeNotification = (id: number) => {
-  notifications.value = notifications.value.filter((item) => item.id !== id);
+const removeNotification = async (id: string) => {
+  if (!$db) return;
+  await deleteDoc(doc($db, "notifications", id));
 
   if (selectedNotification.value?.id === id) {
     selectedNotification.value = null;
   }
 };
 
-const openNotification = (item: UserNotification) => {
+const openNotification = async (item: UserNotification) => {
   selectedNotification.value = item;
-  markAsRead(item.id);
+  await markAsRead(item.id);
 };
+
+function notificationTime(value: any): string {
+  const date = value?.toDate?.() || (value ? new Date(value) : null);
+  return date && !Number.isNaN(date.getTime()) ? date.toLocaleString() : "Just now";
+}
+
+onMounted(() => {
+  if (!$db || !user.value?.id) {
+    loading.value = false;
+    return;
+  }
+  unsubscribe = onSnapshot(query(collection($db, "notifications"), where("recipientId", "==", user.value.id)), (snapshot) => {
+    notifications.value = snapshot.docs.map((item) => {
+      const data = item.data();
+      return { id: item.id, title: String(data.title || "Notification"), message: String(data.message || ""), time: notificationTime(data.createdAt), type: ["booking", "promo", "system"].includes(data.type) ? data.type : "system", isRead: Boolean(data.isRead) } as UserNotification;
+    });
+    loading.value = false;
+  }, () => { loading.value = false; });
+});
+
+onUnmounted(() => unsubscribe());
 </script>
 
 <template>
@@ -217,6 +210,7 @@ const openNotification = (item: UserNotification) => {
         </div>
 
         <div class="space-y-3 px-5 pb-8 sm:px-8">
+          <p v-if="loading" class="py-8 text-center text-sm text-slate-500">Loading notifications...</p>
           <article
             v-for="item in filteredNotifications"
             :key="item.id"

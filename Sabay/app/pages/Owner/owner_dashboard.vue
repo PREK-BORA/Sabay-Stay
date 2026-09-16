@@ -136,6 +136,7 @@ const statusBadge = (status) => {
 }
 
 definePageMeta({
-  layout: 'owner'
+  layout: 'owner',
+  middleware: ['owner']
 })
 </script>

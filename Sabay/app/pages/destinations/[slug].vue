@@ -126,18 +126,19 @@ const destinationDetails: Record<string, DestinationInfo> = {
 };
 
 // Aliases for user-friendly slugs or spaces in route params
-destinationDetails["khos-rong"] = destinationDetails["koh-rong"];
-destinationDetails["khos rong"] = destinationDetails["koh-rong"];
-destinationDetails["koh rong"] = destinationDetails["koh-rong"];
-destinationDetails["kyoto"] = destinationDetails["angkor-wat"];
-destinationDetails["angkor wat"] = destinationDetails["angkor-wat"];
-destinationDetails["khos-sdach"] = destinationDetails["koh-sdach"];
-destinationDetails["khos sdach"] = destinationDetails["koh-sdach"];
-destinationDetails["koh sdach"] = destinationDetails["koh-sdach"];
-destinationDetails["khos-songsa"] = destinationDetails["song-saa"];
-destinationDetails["khos songsa"] = destinationDetails["song-saa"];
-destinationDetails["song saa"] = destinationDetails["song-saa"];
-destinationDetails["chiso mountain"] = destinationDetails["chiso-mountain"];
+const defaultDestination = destinationDetails["koh-rong"]!;
+destinationDetails["khos-rong"] = defaultDestination;
+destinationDetails["khos rong"] = defaultDestination;
+destinationDetails["koh rong"] = defaultDestination;
+destinationDetails["kyoto"] = destinationDetails["angkor-wat"]!;
+destinationDetails["angkor wat"] = destinationDetails["angkor-wat"]!;
+destinationDetails["khos-sdach"] = destinationDetails["koh-sdach"]!;
+destinationDetails["khos sdach"] = destinationDetails["koh-sdach"]!;
+destinationDetails["koh sdach"] = destinationDetails["koh-sdach"]!;
+destinationDetails["khos-songsa"] = destinationDetails["song-saa"]!;
+destinationDetails["khos songsa"] = destinationDetails["song-saa"]!;
+destinationDetails["song saa"] = destinationDetails["song-saa"]!;
+destinationDetails["chiso mountain"] = destinationDetails["chiso-mountain"]!;
 
 const destination = computed<DestinationInfo>(() => {
   const rawSlug = String(route.params.slug || "").trim();
@@ -147,8 +148,7 @@ const destination = computed<DestinationInfo>(() => {
     destinationDetails[normalizedSlug] ??
     destinationDetails[rawSlug.toLowerCase()] ??
     destinationDetails[rawSlug] ??
-    destinationDetails["koh-rong"] ??
-    destinationDetails["angkor-wat"]
+    defaultDestination
   );
 });
 

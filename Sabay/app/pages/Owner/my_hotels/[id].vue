@@ -1,66 +1,112 @@
 <template>
   <div class="p-8 max-w-5xl mx-auto space-y-6">
-    <!-- Breadcrumb & Back -->
+    <!-- Breadcrumb & Navigation Actions -->
     <div class="flex items-center justify-between">
-      <NuxtLink to="/owner/my_hotels" class="text-xs font-semibold text-gray-500 hover:text-indigo-950 flex items-center gap-1">
-        ← Back to My Properties
+      <NuxtLink 
+        to="/owner/my_hotels" 
+        class="text-xs font-semibold text-gray-500 hover:text-indigo-950 flex items-center gap-1.5 transition"
+      >
+        <ArrowLeft class="w-4 h-4" />
+        Back to My Properties
       </NuxtLink>
-      <div class="flex items-center gap-3">
-        <button @click="openEditModal" class="px-4 py-2 text-xs font-bold text-amber-700 bg-amber-50 rounded-xl hover:bg-amber-100 transition">
+
+      <div v-if="hotel" class="flex items-center gap-3">
+        <button 
+          @click="openEditModal" 
+          class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-amber-700 bg-amber-50 rounded-xl hover:bg-amber-100 transition shadow-xs"
+        >
+          <Pencil class="w-3.5 h-3.5" />
           Edit Property
         </button>
-        <button @click="handleDelete" class="px-4 py-2 text-xs font-bold text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition">
+        <button 
+          @click="handleDelete" 
+          class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-red-600 bg-red-50 rounded-xl hover:bg-red-100 transition shadow-xs"
+        >
+          <Trash2 class="w-3.5 h-3.5" />
           Delete
         </button>
       </div>
     </div>
 
-    <!-- Hotel Details Header Card -->
-    <div v-if="hotel" class="bg-white rounded-3xl border border-gray-100 shadow-xs overflow-hidden">
-        <div class="p-6 space-y-3">
-        <div class="flex items-center gap-2 text-xs">
-            <span class="font-bold text-gray-700">Rate:</span>
-            <span class="font-semibold text-gray-900">★ {{ hotel.rating || '5.0' }}</span>
-        </div>
+    <!-- Skeleton Loading State -->
+    <div v-if="loading" class="bg-white rounded-3xl border border-gray-100 shadow-xs overflow-hidden p-6 animate-pulse space-y-4">
+      <div class="h-60 bg-gray-200 rounded-2xl w-full"></div>
+      <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+      <div class="h-8 bg-gray-200 rounded w-1/2"></div>
+      <div class="h-16 bg-gray-200 rounded w-3/4"></div>
+    </div>
 
+    <!-- Hotel Details Header Card -->
+    <div v-else-if="hotel" class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+      <!-- Property Banner Image -->
+      <div class="h-64 sm:h-80 bg-gray-100 relative overflow-hidden">
+        <NuxtImg 
+          :src="getHotelImageUrl(hotel.image)" 
+          :alt="hotel.name"
+          loading="lazy"
+          class="w-full h-full object-cover" 
+        />
+        <span class="absolute top-4 right-4 flex items-center gap-1.5 bg-white/90 backdrop-blur-xs px-3 py-1.5 rounded-full text-xs font-bold text-gray-800 border border-gray-100 shadow-xs">
+          <Star class="w-4 h-4 text-amber-500 fill-amber-400" />
+          {{ hotel.rating || '5.0' }}
+        </span>
+      </div>
+
+      <div class="p-6 sm:p-8 space-y-4">
         <div>
-            <span class="text-xs font-bold text-gray-700">City: </span>
-            <span class="text-xs font-bold text-indigo-950 uppercase tracking-wider">
-            {{ hotel.city || hotel.location || 'Location Not Specified' }}
-            </span>
-            <h1 class="text-3xl font-serif font-bold text-gray-900 mt-1">{{ hotel.name }}</h1>
+          <span class="flex items-center gap-1.5 text-xs font-bold text-indigo-950 uppercase tracking-wider mb-1">
+            <MapPin class="w-3.5 h-3.5 text-indigo-800" />
+            City: {{ hotel.city || hotel.location || 'Location Not Specified' }}
+          </span>
+          <h1 class="text-3xl font-serif font-bold text-gray-900">{{ hotel.name }}</h1>
         </div>
 
         <p class="text-sm text-gray-600 leading-relaxed max-w-3xl">
-            {{ hotel.description || 'No description added yet for this property.' }}
+          {{ hotel.description || 'No description added yet for this property.' }}
         </p>
 
         <!-- Quick Action Link to Rooms -->
-        <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
-            <div>
-            <h3 class="text-sm font-bold text-gray-900">Rooms Management</h3>
-            <p class="text-xs text-gray-500">Add or modify room types for this property.</p>
+        <div class="pt-6 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start gap-3">
+            <div class="p-2.5 bg-indigo-50 text-indigo-900 rounded-xl">
+              <Building2 class="w-5 h-5" />
             </div>
-            <NuxtLink 
+            <div>
+              <h3 class="text-sm font-bold text-gray-900">Rooms Management</h3>
+              <p class="text-xs text-gray-500">Add or modify room types and availability for this property.</p>
+            </div>
+          </div>
+          <NuxtLink 
             :to="`/owner/room?hotelId=${hotel.id}`" 
-            class="px-4 py-2.5 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition"
-            >
-            Manage Rooms →
-            </NuxtLink>
+            class="flex items-center justify-center gap-2 px-5 py-2.5 text-xs font-bold bg-indigo-950 text-white rounded-xl hover:bg-indigo-900 transition shadow-xs self-start sm:self-auto"
+          >
+            Manage Rooms
+            <ArrowRight class="w-3.5 h-3.5" />
+          </NuxtLink>
         </div>
-        </div>
+      </div>
     </div>
 
-    <div v-else class="text-center py-20 bg-white rounded-2xl border border-gray-100">
-      <p class="text-gray-500 text-sm">Loading property details...</p>
+    <!-- Fallback / Not Found State -->
+    <div v-else class="text-center py-20 bg-white rounded-2xl border border-gray-100 shadow-xs flex flex-col items-center">
+      <Building2 class="w-12 h-12 text-gray-300 mb-3" />
+      <p class="text-gray-600 text-sm font-medium">Property details could not be found.</p>
+      <NuxtLink to="/owner/my_hotels" class="mt-4 px-4 py-2 text-xs font-bold text-indigo-950 bg-indigo-50 rounded-xl">
+        Return to My Properties
+      </NuxtLink>
     </div>
 
     <!-- Edit Modal -->
-    <div v-if="showEditModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+    <div v-if="showEditModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4" @click.self="showEditModal = false">
       <div class="bg-white rounded-2xl border border-gray-100 shadow-2xl max-w-xl w-full p-6 space-y-5">
         <div class="flex justify-between items-center border-b border-gray-100 pb-4">
-          <h2 class="text-xl font-serif font-bold text-gray-900">Edit Property Details</h2>
-          <button @click="showEditModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
+          <h2 class="text-xl font-serif font-bold text-gray-900 flex items-center gap-2.5">
+            <Pencil class="w-5 h-5 text-indigo-900" />
+            Edit Property Details
+          </h2>
+          <button @click="showEditModal = false" class="text-gray-400 hover:text-gray-600">
+            <X class="w-5 h-5" />
+          </button>
         </div>
 
         <form @submit.prevent="handleUpdate" class="space-y-4">
@@ -71,17 +117,20 @@
               type="text" 
               required 
               placeholder="e.g. Sunset Boutique Hotel"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition" 
             />
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">City / Location</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 flex items-center gap-1.5">
+              <MapPin class="w-3.5 h-3.5 text-gray-400" />
+              City / Location
+            </label>
             <input 
               v-model="editForm.city" 
               type="text" 
               required 
               placeholder="e.g. Siem Reap"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition" 
             />
           </div>
           <div>
@@ -90,23 +139,31 @@
               v-model="editForm.description" 
               rows="3" 
               placeholder="Tell guests about the vibe, amenities, and what makes this property special..."
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition"
             ></textarea>
           </div>
           <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Cover Image URL</label>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 flex items-center gap-1.5">
+              <UploadCloud class="w-3.5 h-3.5 text-gray-400" />
+              Cover Image URL
+            </label>
             <input 
               v-model="editForm.image" 
               type="url" 
               placeholder="https://example.com/your-hotel-photo.jpg"
-              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950" 
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-indigo-950 focus:ring-1 focus:ring-indigo-950 transition" 
             />
             <p class="text-[11px] text-gray-400 mt-1">Leave blank to use a default cover image.</p>
           </div>
 
-          <div class="flex justify-end gap-2 pt-2 border-t border-gray-100">
-            <button type="button" @click="showEditModal = false" class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl">Cancel</button>
-            <button type="submit" :disabled="isUpdating" class="px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl">
+          <div class="flex justify-end gap-2 pt-4 border-t border-gray-100">
+            <button type="button" @click="showEditModal = false" class="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 rounded-xl hover:bg-gray-200">
+              <X class="w-3.5 h-3.5" />
+              Cancel
+            </button>
+            <button type="submit" :disabled="isUpdating" class="flex items-center gap-2 px-5 py-2 text-xs font-bold bg-indigo-950 text-white rounded-xl shadow-xs disabled:opacity-60">
+              <Loader2 v-if="isUpdating" class="w-3.5 h-3.5 animate-spin" />
+              <Save v-else class="w-3.5 h-3.5" />
               {{ isUpdating ? 'Saving...' : 'Update Property' }}
             </button>
           </div>
@@ -118,19 +175,29 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { ArrowLeft, ArrowRight, Pencil, Trash2, Star, MapPin, Building2, X, UploadCloud, Save, Loader2 } from 'lucide-vue-next'
 
 definePageMeta({ layout: 'owner' })
 
 const route = useRoute()
 const router = useRouter()
+const img = useImage()
 const { getHotels, updateHotel, deleteHotel } = useFirestoreDB()
 
 const hotel = ref(null)
+const loading = ref(true)
 const showEditModal = ref(false)
 const isUpdating = ref(false)
-const fallbackImage = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80'
 
+const fallbackImageUrl = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1000&q=80'
 const editForm = ref({ name: '', city: '', description: '', image: '' })
+
+const getHotelImageUrl = (imageUrl) => {
+  if (imageUrl?.trim()) {
+    return imageUrl
+  }
+  return img(fallbackImageUrl, { width: 1000, quality: 80 })
+}
 
 const loadHotelData = async () => {
   const hotelId = route.params.id
@@ -138,18 +205,31 @@ const loadHotelData = async () => {
   if (import.meta.client) {
     const cached = localStorage.getItem('sabay_hotels_cache')
     if (cached) {
-      const list = JSON.parse(cached)
-      const found = list.find(h => h.id === hotelId)
-      if (found) hotel.value = found
+      try {
+        const list = JSON.parse(cached)
+        const found = list.find(h => h.id === hotelId)
+        if (found) {
+          hotel.value = found
+          loading.value = false
+        }
+      } catch (e) {
+        console.error(e)
+      }
     }
   }
 
-  const allHotels = await getHotels()
-  if (allHotels) {
-    const found = allHotels.find(h => h.id === hotelId)
-    if (found) {
-      hotel.value = found
+  try {
+    const allHotels = await getHotels()
+    if (allHotels) {
+      const found = allHotels.find(h => h.id === hotelId)
+      if (found) {
+        hotel.value = found
+      }
     }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -172,21 +252,25 @@ const handleUpdate = async () => {
     name: editForm.value.name,
     city: editForm.value.city,
     description: editForm.value.description || '',
-    image: editForm.value.image?.trim() ? editForm.value.image : fallbackImage
+    image: editForm.value.image?.trim() ? editForm.value.image : ''
   }
 
   hotel.value = { ...hotel.value, ...payload }
   showEditModal.value = false
 
-  // Update Cache
+  // Update Local Storage Cache
   if (import.meta.client) {
     const cached = localStorage.getItem('sabay_hotels_cache')
     if (cached) {
-      const list = JSON.parse(cached)
-      const index = list.findIndex(h => h.id === route.params.id)
-      if (index !== -1) {
-        list[index] = { ...list[index], ...payload }
-        localStorage.setItem('sabay_hotels_cache', JSON.stringify(list))
+      try {
+        const list = JSON.parse(cached)
+        const index = list.findIndex(h => h.id === route.params.id)
+        if (index !== -1) {
+          list[index] = { ...list[index], ...payload }
+          localStorage.setItem('sabay_hotels_cache', JSON.stringify(list))
+        }
+      } catch (e) {
+        console.error(e)
       }
     }
   }
@@ -205,12 +289,15 @@ const handleDelete = async () => {
 
   const hotelId = route.params.id
 
-  // Remove from cache
   if (import.meta.client) {
     const cached = localStorage.getItem('sabay_hotels_cache')
     if (cached) {
-      const list = JSON.parse(cached).filter(h => h.id !== hotelId)
-      localStorage.setItem('sabay_hotels_cache', JSON.stringify(list))
+      try {
+        const list = JSON.parse(cached).filter(h => h.id !== hotelId)
+        localStorage.setItem('sabay_hotels_cache', JSON.stringify(list))
+      } catch (e) {
+        console.error(e)
+      }
     }
   }
 
