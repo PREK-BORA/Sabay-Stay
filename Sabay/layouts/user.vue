@@ -138,7 +138,7 @@ const navigationItems = [
   },
   { 
     name: 'Messages', 
-    path: '/dashboard/messages', 
+    path: '/dashboard/message', 
     exact: false,
     hasBadge: true,
     icon: 'M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z' 
@@ -239,7 +239,7 @@ const navigationItems = [
                 <div class="mt-3 space-y-2">
                   <NuxtLink 
                     v-if="unreadCount > 0"
-                    to="/dashboard/messages" 
+                    to="/dashboard/message" 
                     @click="isNotificationOpen = false"
                     class="block p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors text-xs"
                   >

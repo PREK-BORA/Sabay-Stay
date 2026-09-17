@@ -10,10 +10,10 @@ const resolveRole = (role?: string, email?: string) => {
 const isAdminRole = (role?: string) => role === 'admin' || role === 'super_admin'
 
 export const useAuth = () => {
-  // Global reactive user state across Nuxt app
+  
   const user = useState<any>('auth_user', () => null)
 
-  // Sync state with localStorage safely on client side initialization
+ 
   if (import.meta.client && !user.value) {
     const savedUser = localStorage.getItem('auth_user')
     if (savedUser) {
@@ -28,7 +28,7 @@ export const useAuth = () => {
   const isLoggedIn = computed(() => !!user.value)
   const isAdmin = computed(() => isAdminRole(user.value?.role))
 
-  // Helper function to update reactive state and localStorage safely
+  
   const setUserSession = (userData: any) => {
     user.value = userData
     if (import.meta.client) {
@@ -40,7 +40,7 @@ export const useAuth = () => {
     }
   }
 
-  // 1. មុខងារ Register + រក្សាទុកក្នុង Firebase Firestore
+ 
   const register = async (userData: { 
     name: string; 
     email: string; 
@@ -76,7 +76,7 @@ export const useAuth = () => {
         createdAt: new Date().toISOString()
       }
 
-      // 🔴 រក្សាទុកចូល Firestore Database ( Collection 'user' )
+      
       if (db) {
         await setDoc(doc(db as any, 'user', uid), {
           name: userData.name,
@@ -91,7 +91,7 @@ export const useAuth = () => {
         })
       }
 
-      // រក្សាទុកក្នុង State & LocalStorage
+      
       setUserSession(newUser)
 
       if (isAdminUser) {
@@ -105,7 +105,7 @@ export const useAuth = () => {
     }
   }
 
-  // 2. មុខងារ Login
+  
   const login = async (credentials: { email: string; password?: string; role?: string }) => {
     const { $auth: auth, $db: db } = useNuxtApp()
 
@@ -138,7 +138,7 @@ export const useAuth = () => {
         }
       }
 
-      // រក្សាទុកក្នុង State & LocalStorage
+     
       setUserSession(loggedUser)
 
       if (isAdminRole(loggedUser.role)) {
@@ -152,7 +152,7 @@ export const useAuth = () => {
     }
   }
 
-  // 3. មុខងារ Logout
+  
   const logout = async () => {
     const { $auth: auth } = useNuxtApp()
     if (auth) {

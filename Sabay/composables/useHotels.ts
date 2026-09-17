@@ -13,7 +13,7 @@ export interface Hotel {
 }
 
 export const useHotels = () => {
-  // Global State សម្រាប់ Hotels Data
+  
   const hotels = useState<Hotel[]>('hotels_list', () => [
     {
       id: 1,
@@ -56,12 +56,12 @@ export const useHotels = () => {
     }
   ])
 
-  // Search, Filter, and Selected Hotel State
+  
   const searchQuery = useState<string>('hotel_search_query', () => '')
   const selectedRegion = useState<string>('hotel_selected_region', () => 'All')
   const loading = ref<boolean>(false)
 
-  // Computed: ស្វែងរក និង Filter សណ្ឋាគារដោយស្វ័យប្រវត្តិ
+  
   const filteredHotels = computed(() => {
     return hotels.value.filter(hotel => {
       const matchesSearch = hotel.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -73,18 +73,18 @@ export const useHotels = () => {
     })
   })
 
-  // Get Hotel by ID
+  
   const getHotelById = (id: number) => {
     return hotels.value.find(h => h.id === Number(id))
   }
 
-  // Add New Hotel (សម្រាប់ Admin)
+ 
   const addHotel = (newHotel: Omit<Hotel, 'id'>) => {
     const id = hotels.value.length ? Math.max(...hotels.value.map(h => h.id)) + 1 : 1
     hotels.value.push({ id, ...newHotel })
   }
 
-  // Delete Hotel (សម្រាប់ Admin)
+ 
   const deleteHotel = (id: number) => {
     hotels.value = hotels.value.filter(h => h.id !== id)
   }

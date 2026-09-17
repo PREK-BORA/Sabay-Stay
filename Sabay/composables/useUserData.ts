@@ -1,7 +1,5 @@
 import { addDoc, collection } from 'firebase/firestore'
 import { useAuth } from '~/composables/useAuth'
-
-// 1. បង្កើត Interface សម្រាប់ប្រភេទទិន្នន័យ (Type Safety)
 export interface Booking {
   id: string | number
   userId?: string
@@ -66,24 +64,23 @@ export const useUserData = () => {
 
   const safeBookings = computed<Booking[]>(() => Array.isArray(bookings.value) ? bookings.value : [])
 
-  // Global State សម្រាប់ Favorites
+ 
   const favorites = useState<FavoritePlace[]>('user_favorites', () => [])
 
-  // Global State សម្រាប់ Points ដើម
+  
   const userPoints = useState<number>('user_points', () => 500)
 
-  // គណនា Total Bookings Dynamic
   const totalBookings = computed(() => safeBookings.value.length)
 
-  // គណនា Saved Places (Favorites) Dynamic
+ 
   const totalFavorites = computed(() => favorites.value.length)
 
-  // គណនា Reward Points (Points ដើម + ១ Booking = ១,០០០ Points)
+
   const rewardPoints = computed(() => {
     return userPoints.value + (totalBookings.value * 1000)
   })
 
-  // Action: បន្ថែម Booking ថ្មី
+
   const addBooking = async (bookingData: Booking) => {
     if (!Array.isArray(bookings.value)) {
       bookings.value = []
@@ -101,7 +98,7 @@ export const useUserData = () => {
     }
   }
 
-  // Action: ប្តូរ Status នៃ Booking (ប្រើសម្រាប់ Admin & User)
+
   const updateBookingStatus = (id: string | number, newStatus: Booking['status']) => {
     const item = safeBookings.value.find(b => b.id === id)
     if (item) {
@@ -109,7 +106,7 @@ export const useUserData = () => {
     }
   }
 
-  // Action: បន្ថែម/លុប Favorites
+
   const toggleFavorite = (place: FavoritePlace) => {
     const index = favorites.value.findIndex(item => item.id === place.id)
     if (index > -1) {
@@ -119,7 +116,7 @@ export const useUserData = () => {
     }
   }
 
-  // Action: ពិនិត្យមើលថា Place នោះជា Favorite ឬនៅ (Helper Function)
+  
   const isFavorite = (id: number) => {
     return favorites.value.some(item => item.id === id)
   }

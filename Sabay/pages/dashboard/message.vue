@@ -78,6 +78,10 @@ const initializeChat = async () => {
       } else {
         isLoading.value = false
       }
+    }, (error) => {
+      console.error('Error initializing chat:', error)
+      errorMessage.value = 'Could not load chat session.'
+      isLoading.value = false
     })
   } catch (error) {
     console.error('Error initializing chat:', error)
@@ -86,8 +90,19 @@ const initializeChat = async () => {
   }
 }
 
-watch(() => user.value, (newUser) => {
-  if (newUser && !chatId.value) initializeChat()
+watch(() => user.value?.id || user.value?.uid, (currentUserId, previousUserId) => {
+  if (currentUserId === previousUserId && currentUserId) return
+
+  unsubscribeChat?.()
+  unsubscribeMessages?.()
+  unsubscribeChat = null
+  unsubscribeMessages = null
+  chatId.value = null
+  messages.value = []
+  errorMessage.value = ''
+  isLoading.value = Boolean(currentUserId)
+
+  if (currentUserId) initializeChat()
 }, { immediate: true })
 
 
@@ -170,7 +185,7 @@ onUnmounted(() => {
       <p v-if="isLoading" class="text-center text-sm text-slate-400">Loading messages...</p>
       <p v-else-if="errorMessage" class="text-center text-sm text-red-500">{{ errorMessage }}</p>
       <div v-else-if="!messages.length" class="flex h-full flex-col items-center justify-center text-slate-400">
-        <p class="text-sm">No messages yet. Ask Admin anything!</p>
+        <p class="text-sm">No messages yet. Ask our support team anything!</p>
       </div>
 
       <div
