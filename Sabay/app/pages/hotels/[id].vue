@@ -353,7 +353,7 @@ onUnmounted(() => {
           </div>
           <label class="mt-3 block text-xs font-medium text-slate-600">Guests<input v-model.number="guests" type="number" min="1" :max="selectedRoom?.capacity || 8" class="mt-1 w-full rounded-lg border border-slate-200 px-2 py-2 text-sm text-slate-700" /></label>
           <p v-if="bookingNights" class="mt-3 text-sm font-semibold text-slate-800">{{ bookingNights }} night{{ bookingNights === 1 ? '' : 's' }} · ${{ bookingTotal.toLocaleString() }} total</p>
-          <button type="button" class="mt-4 w-full rounded-xl bg-amber-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isBooking" @click="bookNow">{{ isBooking ? 'Sending booking...' : 'Buy now' }}</button>
+          <button type="button" class="mt-4 w-full rounded-xl bg-amber-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60" :disabled="isBooking" @click="bookNow">{{ isBooking ? 'Sending booking...' : 'Book Now' }}</button>
           <p v-if="bookingSuccess" class="mt-3 text-center text-xs font-medium text-emerald-700">{{ bookingSuccess }}</p>
           <p v-if="bookingError" class="mt-3 text-center text-xs font-medium text-red-600">{{ bookingError }}</p>
           <p class="mt-3 text-center text-xs text-slate-400">Prices may vary by date and room selection.</p>

@@ -16,15 +16,13 @@ import { definePageMeta, useNuxtApp } from '#imports'
 import { 
   PlusCircle, 
   Search, 
-  BaggageClaim, 
   BedDouble, 
-  MapPin, 
   Pencil, 
   Trash2, 
   X,
   Building,
   UploadCloud,
-  ChevronDown
+  ImageIcon
 } from 'lucide-vue-next'
 
 definePageMeta({
@@ -290,15 +288,16 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-8 max-w-7xl mx-auto space-y-6">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+  <div class="space-y-6 max-w-7xl mx-auto pb-12 text-slate-200">
+    <!-- Top Header -->
+    <div class="bg-[#1a1c23] rounded-2xl p-6 border border-slate-800 shadow-lg flex flex-col sm:flex-row justify-between sm:items-center gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900">Room Management</h1>
-        <p class="text-slate-500 text-sm mt-1">Manage room inventories, status availability, and pricing in real time.</p>
+        <h1 class="text-3xl font-bold text-white tracking-tight">Room Management</h1>
+        <p class="text-sm text-slate-400 mt-1">Manage room inventories, status availability, and pricing in real time.</p>
       </div>
       <button 
         @click="openAddModal"
-        class="bg-indigo-900 hover:bg-indigo-950 text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm transition flex items-center gap-2"
+        class="flex items-center gap-2 px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-sm shadow-md transition-colors w-fit"
       >
         <PlusCircle class="w-4 h-4" />
         Add New Room
@@ -306,115 +305,131 @@ onUnmounted(() => {
     </div>
 
     <!-- Filters Bar -->
-    <div class="bg-white p-4 rounded-xl border border-slate-200 flex flex-wrap gap-4 items-center justify-between relative shadow-sm">
-      <Search class="absolute left-7 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 hidden sm:block" />
-      <div class="flex-1 min-w-[240px]">
+    <div class="flex flex-col md:flex-row md:items-center gap-4 bg-[#1a1c23] p-4 rounded-2xl border border-slate-800 shadow-md relative">
+      <div class="relative flex-1">
+        <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 hidden md:block" />
         <input 
           v-model="searchQuery" 
           type="text" 
           placeholder="Search by title, room number, or hotel..." 
-          class="w-full border border-slate-300 rounded-lg sm:pl-10 px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          class="w-full px-4 py-2.5 md:pl-11 bg-[#121318] border border-slate-700/80 rounded-xl text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 shadow-inner"
         />
       </div>
-      <div class="flex gap-3">
-        <select v-model="selectedStatus" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none">
-          <option>All Statuses</option>
-          <option value="Available">Available</option>
-          <option value="Occupied">Occupied</option>
-          <option value="Maintenance">Maintenance</option>
-        </select>
-        <select v-model="selectedType" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none">
-          <option>All Types</option>
-          <option value="Single">Single</option>
-          <option value="Double">Double</option>
-          <option value="Suite">Suite</option>
-          <option value="Deluxe">Deluxe</option>
-          <option value="Villa">Villa</option>
-        </select>
-      </div>
+      <select v-model="selectedStatus" class="px-4 py-2.5 bg-[#121318] border border-slate-700/80 rounded-xl text-sm text-slate-300 focus:outline-none focus:border-amber-500">
+        <option value="All Statuses">All Statuses</option>
+        <option value="Available">Available</option>
+        <option value="Occupied">Occupied</option>
+        <option value="Maintenance">Maintenance</option>
+      </select>
+      <select v-model="selectedType" class="px-4 py-2.5 bg-[#121318] border border-slate-700/80 rounded-xl text-sm text-slate-300 focus:outline-none focus:border-amber-500">
+        <option value="All Types">All Types</option>
+        <option value="Single">Single</option>
+        <option value="Double">Double</option>
+        <option value="Suite">Suite</option>
+        <option value="Deluxe">Deluxe</option>
+        <option value="Villa">Villa</option>
+      </select>
     </div>
 
-    <!-- Data Table -->
-    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-      <div v-if="loading" class="p-8 text-center text-slate-500">Loading rooms...</div>
-      <div v-else-if="filteredRooms.length === 0" class="p-8 text-center text-slate-500">No room records found.</div>
-      <table v-else class="w-full text-left text-sm border-collapse">
-        <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-medium">
-          <tr>
-            <th class="p-4">Room</th>
-            <th class="p-4">Hotel</th>
-            <th class="p-4">Type</th>
-            <th class="p-4">Price / Night</th>
-            <th class="p-4">Status</th>
-            <th class="p-4 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 text-slate-700">
-          <tr v-for="room in filteredRooms" :key="room.id" class="hover:bg-slate-50 transition">
-            <td class="p-4 flex items-center gap-3">
-              <img :src="room.image" alt="Room preview" class="w-12 h-12 rounded-lg object-cover bg-slate-100" />
-              <div>
-                <div class="font-semibold text-slate-900">{{ room.title }}</div>
-                <div class="text-xs text-slate-400">Room #{{ room.roomNumber }} • Floor {{ room.floor }}</div>
-              </div>
-            </td>
-            <td class="p-4 font-medium text-slate-800">
-              <div class="flex items-center gap-1.5">
-                <Building class="w-3.5 h-3.5 text-slate-400" />
-                {{ room.hotelName }}
-              </div>
-            </td>
-            <td class="p-4">{{ room.type }}</td>
-            <td class="p-4 font-semibold text-slate-900">
-              <div class="flex items-center gap-0.5">
-                ${{ room.price }}
-              </div>
-            </td>
-            <td class="p-4">
-              <span 
-                class="px-2.5 py-1 rounded-full text-xs font-semibold"
-                :class="{
-                  'bg-emerald-100 text-emerald-700': room.status === 'Available',
-                  'bg-amber-100 text-amber-700': room.status === 'Occupied',
-                  'bg-rose-100 text-rose-700': room.status === 'Maintenance'
-                }"
-              >
-                {{ room.status }}
-              </span>
-            </td>
-            <td class="p-4 text-right space-x-2">
-              <button @click="openEditModal(room)" class="text-indigo-600 hover:text-indigo-900 font-medium text-xs flex items-center gap-1">
-                <Pencil class="w-3 h-3" />
-                Edit
-              </button>
-              <button @click="deleteRoomItem(room.id)" class="text-rose-600 hover:text-rose-800 font-medium text-xs flex items-center gap-1">
-                <Trash2 class="w-3 h-3" />
-                Delete
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Data Table Container -->
+    <div class="bg-[#1a1c23] rounded-2xl border border-slate-800 shadow-md overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm border-collapse">
+          <thead>
+            <tr class="bg-[#121318] border-b border-slate-800 text-slate-400 font-medium text-xs uppercase tracking-wider">
+              <th class="py-3.5 px-6">Room</th>
+              <th class="py-3.5 px-6">Hotel</th>
+              <th class="py-3.5 px-6">Type</th>
+              <th class="py-3.5 px-6">Price / Night</th>
+              <th class="py-3.5 px-6">Status</th>
+              <th class="py-3.5 px-6 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60">
+            <tr v-for="room in filteredRooms" :key="room.id" class="text-slate-300 hover:bg-[#222530] transition-colors">
+              <td class="py-4 px-6 flex items-center gap-3">
+                <div class="w-12 h-12 bg-slate-800 rounded-xl overflow-hidden shrink-0 flex items-center justify-center text-slate-400 font-bold border border-slate-700 relative">
+                  <img v-if="room.image" :src="room.image" class="w-full h-full object-cover" />
+                  <ImageIcon v-else class="w-5 h-5 text-slate-500" />
+                </div>
+                <div>
+                  <p class="font-semibold text-white text-sm">{{ room.title }}</p>
+                  <p class="text-xs text-slate-400">Room #{{ room.roomNumber }} • Floor {{ room.floor }}</p>
+                </div>
+              </td>
+              <td class="py-4 px-6 text-slate-300 font-medium">
+                <div class="flex items-center gap-1.5">
+                  <Building class="w-3.5 h-3.5 text-amber-400" />
+                  {{ room.hotelName }}
+                </div>
+              </td>
+              <td class="py-4 px-6 text-slate-300">{{ room.type }}</td>
+              <td class="py-4 px-6 font-semibold text-slate-200">
+                <div class="flex items-center gap-0.5">
+                  ${{ room.price }}
+                </div>
+              </td>
+              <td class="py-4 px-6">
+                <span 
+                  class="px-3 py-1 rounded-full text-xs font-semibold border inline-block text-center"
+                  :class="{
+                    'bg-emerald-950 text-emerald-400 border-emerald-800/60': room.status === 'Available',
+                    'bg-amber-950 text-amber-400 border-amber-800/60': room.status === 'Occupied',
+                    'bg-rose-950 text-rose-400 border-rose-800/60': room.status === 'Maintenance'
+                  }"
+                >
+                  {{ room.status }}
+                </span>
+              </td>
+              <td class="py-4 px-6 text-right space-x-2">
+                <button @click="openEditModal(room)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-300 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+                  <Pencil class="w-3 h-3 text-amber-400" />
+                  Edit
+                </button>
+                <button @click="deleteRoomItem(room.id)" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-rose-400 bg-rose-950/60 rounded-lg hover:bg-rose-900 transition-colors border border-rose-800/60">
+                  <Trash2 class="w-3 h-3" />
+                  Delete
+                </button>
+              </td>
+            </tr>
+
+            <tr v-if="loading">
+              <td colspan="6" class="py-16 text-center text-slate-400 text-xs font-medium">
+                <div class="inline-flex items-center gap-2">
+                  <div class="w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
+                  Loading room inventories...
+                </div>
+              </td>
+            </tr>
+
+            <tr v-if="!loading && filteredRooms.length === 0">
+              <td colspan="6" class="py-16 text-center text-slate-500 text-xs font-medium">
+                No matching room records found.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- Modal Dialog -->
-    <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-sm">
-      <div class="w-full max-w-2xl bg-white rounded-2xl p-6 shadow-xl max-h-[90vh] overflow-y-auto space-y-4 border border-slate-100">
-        <div class="flex items-center justify-between pb-3 border-b">
-          <h2 class="text-xl font-bold text-slate-800">{{ isEditing ? 'Edit Room' : 'Add New Room' }}</h2>
-          <button @click="closeModal" class="text-slate-400 hover:text-slate-600 font-bold">
+    <div v-if="isModalOpen" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-[#1a1c23] rounded-3xl p-6 w-full max-w-2xl border border-slate-800 shadow-2xl max-h-[90vh] overflow-y-auto space-y-5 text-slate-200">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+          <h3 class="text-lg font-bold text-white">{{ isEditing ? 'Edit Room' : 'Add New Room' }}</h3>
+          <button @click="closeModal" class="text-slate-400 font-bold hover:text-white transition-colors">
             <X class="w-5 h-5" />
           </button>
         </div>
 
-        <form @submit.prevent="saveRoom" class="space-y-4">
-          <div class="grid grid-cols-2 gap-4">
+        <form @submit.prevent="saveRoom" class="space-y-4 text-xs">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Select Hotel</label>
+              <label class="block font-semibold mb-1 text-slate-300">Select Hotel</label>
               <select 
                 :value="formData.hotelId" 
                 @change="handleHotelChange"
-                class="w-full border rounded-lg p-2.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500"
                 required
               >
                 <option v-for="h in hotels" :key="h.id" :value="h.id">
@@ -423,26 +438,26 @@ onUnmounted(() => {
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Room Title</label>
-              <input v-model="formData.title" type="text" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" required />
+              <label class="block font-semibold mb-1 text-slate-300">Room Title</label>
+              <input v-model="formData.title" type="text" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500" required />
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Room Number</label>
-              <input v-model="formData.roomNumber" type="text" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" required />
+              <label class="block font-semibold mb-1 text-slate-300">Room Number</label>
+              <input v-model="formData.roomNumber" type="text" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500" required />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Floor</label>
-              <input v-model.number="formData.floor" type="number" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" required />
+              <label class="block font-semibold mb-1 text-slate-300">Floor</label>
+              <input v-model.number="formData.floor" type="number" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500" required />
             </div>
           </div>
 
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-3 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Room Type</label>
-              <select v-model="formData.type" class="w-full border rounded-lg p-2.5 text-sm bg-white focus:outline-none">
+              <label class="block font-semibold mb-1 text-slate-300">Room Type</label>
+              <select v-model="formData.type" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500">
                 <option value="Single">Single</option>
                 <option value="Double">Double</option>
                 <option value="Suite">Suite</option>
@@ -451,12 +466,12 @@ onUnmounted(() => {
               </select>
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Price / Night ($)</label>
-              <input v-model.number="formData.price" type="number" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" required />
+              <label class="block font-semibold mb-1 text-slate-300">Price / Night ($)</label>
+              <input v-model.number="formData.price" type="number" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500" required />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
-              <select v-model="formData.status" class="w-full border rounded-lg p-2.5 text-sm bg-white focus:outline-none">
+              <label class="block font-semibold mb-1 text-slate-300">Status</label>
+              <select v-model="formData.status" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500">
                 <option value="Available">Available</option>
                 <option value="Occupied">Occupied</option>
                 <option value="Maintenance">Maintenance</option>
@@ -464,39 +479,39 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-3 gap-3">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Beds</label>
-              <input v-model="formData.beds" type="text" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+              <label class="block font-semibold mb-1 text-slate-300">Beds</label>
+              <input v-model="formData.beds" type="text" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Room Size</label>
-              <input v-model="formData.size" type="text" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+              <label class="block font-semibold mb-1 text-slate-300">Room Size</label>
+              <input v-model="formData.size" type="text" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Capacity</label>
-              <input v-model.number="formData.capacity" type="number" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+              <label class="block font-semibold mb-1 text-slate-300">Capacity</label>
+              <input v-model.number="formData.capacity" type="number" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500" />
             </div>
           </div>
 
           <!-- File Upload Field -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
-              <UploadCloud class="w-4 h-4 text-indigo-500" />
+            <label class="flex items-center gap-1.5 font-semibold mb-1 text-slate-300">
+              <UploadCloud class="w-4 h-4 text-amber-400" />
               Upload Room Image
             </label>
             <input 
               type="file" 
               accept="image/*" 
               @change="handleFileUpload" 
-              class="w-full px-3 py-2 border rounded-lg bg-slate-50 text-xs text-slate-500 file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" 
+              class="w-full px-3 py-2 border border-slate-700 rounded-xl bg-[#121318] text-xs text-slate-400 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-amber-950 file:text-amber-400 hover:file:bg-amber-900 cursor-pointer" 
             />
 
-            <div v-if="formData.image" class="mt-2 flex items-center gap-3">
-              <div class="w-16 h-16 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+            <div v-if="formData.image" class="mt-2 flex items-center gap-3 bg-[#121318] p-2 rounded-xl border border-slate-800">
+              <div class="w-16 h-16 rounded-lg overflow-hidden border border-slate-700 shrink-0">
                 <img :src="formData.image" class="w-full h-full object-cover" />
               </div>
-              <button type="button" @click="formData.image = ''" class="text-xs text-rose-600 font-medium hover:underline flex items-center gap-1">
+              <button type="button" @click="formData.image = ''" class="flex items-center gap-1 text-xs text-rose-400 font-medium hover:text-rose-300">
                 <Trash2 class="w-3 h-3" />
                 Remove Image
               </button>
@@ -504,21 +519,21 @@ onUnmounted(() => {
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Amenities</label>
-            <input v-model="formData.amenity" type="text" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20" />
+            <label class="block font-semibold mb-1 text-slate-300">Amenities</label>
+            <input v-model="formData.amenity" type="text" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500" />
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Description</label>
-            <textarea v-model="formData.description" rows="2" class="w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20"></textarea>
+            <label class="block font-semibold mb-1 text-slate-300">Description</label>
+            <textarea v-model="formData.description" rows="2" class="w-full px-3 py-2.5 border border-slate-700 rounded-xl bg-[#121318] text-slate-200 focus:outline-none focus:border-amber-500"></textarea>
           </div>
 
-          <div class="flex justify-end gap-3 pt-4 border-t">
-            <button type="button" @click="closeModal" class="px-4 py-2 bg-slate-100 rounded-lg text-sm text-slate-600 flex items-center gap-1.5">
+          <div class="flex justify-end gap-3 pt-3 border-t border-slate-800">
+            <button type="button" @click="closeModal" class="flex items-center gap-1.5 px-4 py-2 bg-slate-800 rounded-xl hover:bg-slate-700 text-slate-300 transition-colors">
               <X class="w-4 h-4" />
               Cancel
             </button>
-            <button type="submit" class="px-5 py-2 bg-indigo-900 text-white rounded-lg text-sm font-semibold hover:bg-indigo-950 transition flex items-center gap-1.5">
+            <button type="submit" class="flex items-center gap-1.5 px-5 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl transition-colors">
               <BedDouble class="w-4 h-4" />
               {{ isEditing ? 'Update Room' : 'Save Room' }}
             </button>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useAuth } from "~/composables/auth/useAuth";
+import { navigateTo } from "#imports";
 
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
@@ -8,8 +9,10 @@ const fullName = ref("");
 const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
+const role = ref("user");
 const acceptedTerms = ref(false);
 const errorMessage = ref("");
+const successMessage = ref("");
 const { register: createAccount } = useAuth();
 
 const togglePassword = () => {
@@ -39,11 +42,18 @@ async function register() {
   }
 
   try {
+    errorMessage.value = "";
     await createAccount({
       name: fullName.value.trim(),
       email: email.value.trim(),
       password: password.value,
+      role: role.value
     });
+    
+    successMessage.value = "Account request submitted successfully! Please wait for approval.";
+    setTimeout(() => {
+      navigateTo('/auth/login');
+    }, 2000);
   } catch (error: any) {
     errorMessage.value =
       error?.code === "auth/email-already-in-use"
@@ -128,6 +138,17 @@ async function register() {
             />
           </label>
 
+          <label class="block text-xs font-medium text-[#17191e]">
+            Account Type
+            <select
+              v-model="role"
+              class="mt-1.5 block h-12 w-full rounded-md border border-[#c9cad4] px-4 text-sm text-[#252936] outline-none focus:border-[#080d70] focus:ring-1 focus:ring-[#080d70]"
+            >
+              <option value="user">Guest / User Account</option>
+              <option value="owner">Property Owner</option>
+            </select>
+          </label>
+
           <label class="relative block text-xs font-medium text-[#17191e]">
             Password
             <input
@@ -184,6 +205,10 @@ async function register() {
 
           <p v-if="errorMessage" class="text-sm text-red-600" role="alert">
             {{ errorMessage }}
+          </p>
+
+          <p v-if="successMessage" class="text-sm text-emerald-600 font-semibold" role="status">
+            {{ successMessage }}
           </p>
 
           <button

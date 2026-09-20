@@ -1,8 +1,18 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { doc, getDoc, setDoc, updateDoc, type Firestore } from 'firebase/firestore'
+import { doc, getDoc, setDoc, serverTimestamp, type Firestore } from 'firebase/firestore'
 import { getAuth, updateProfile, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth'
 import { definePageMeta, useNuxtApp } from '#imports'
+// Import Lucide Icons
+import { 
+  Settings, 
+  User, 
+  Lock, 
+  Bell, 
+  Save, 
+  CheckCircle2, 
+  AlertTriangle 
+} from 'lucide-vue-next'
 
 definePageMeta({
   layout: 'admin',
@@ -102,10 +112,15 @@ const handleSave = async () => {
       }
 
       if (db) {
-        await updateDoc(doc(db, 'user', user.uid), {
-          name: adminName.value,
-          updatedAt: new Date()
-        }).catch(() => {}) // Ignore if user doc doesn't exist
+        await setDoc(
+          doc(db, 'users', user.uid),
+          {
+            name: adminName.value,
+            email: user.email ?? adminEmail.value,
+            updatedAt: serverTimestamp()
+          },
+          { merge: true }
+        )
       }
     }
 
@@ -143,7 +158,7 @@ const handleSave = async () => {
         emailAlerts: emailAlerts.value,
         bookingAlerts: bookingAlerts.value,
         reportAlerts: reportAlerts.value,
-        updatedAt: new Date()
+        updatedAt: serverTimestamp()
       }, { merge: true })
     }
 
@@ -162,236 +177,241 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6 font-sans">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#1a2b4c] uppercase tracking-wider">
-          System Settings
-        </h1>
-        <p class="text-slate-500 text-xs sm:text-sm mt-1">
-          Manage system configurations, administrator profile, security, and notification preferences.
-        </p>
-      </div>
-
-      <button
-        @click="handleSave"
-        :disabled="loading"
-        class="bg-[#1b1c3e] hover:bg-[#1a2b4c] text-white px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider shadow-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-      >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        {{ loading ? 'Saving...' : 'Save Changes' }}
-      </button>
-    </div>
-
-    <!-- Success / Error Alert Banner -->
-    <Transition name="fade">
-      <div 
-        v-if="showToast" 
-        :class="toastType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'"
-        class="border px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2"
-      >
-        <span>{{ toastType === 'success' ? '✓' : '⚠️' }}</span> {{ toastMessage }}
-      </div>
-    </Transition>
-
-    <!-- Navigation Tabs -->
-    <div class="flex bg-white p-1.5 rounded-xl border border-slate-200 w-fit gap-1 text-xs font-semibold shadow-sm">
-      <button
-        v-for="tab in ([
-          { key: 'general', label: 'General & Profile' },
-          { key: 'security', label: 'Security & Password' },
-          { key: 'notifications', label: 'Notifications' }
-        ] as const)"
-        :key="tab.key"
-        @click="activeTab = tab.key"
-        :class="activeTab === tab.key ? 'bg-[#1b1c3e] text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'"
-        class="px-4 py-2 rounded-lg transition-all uppercase tracking-wider"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
-
-    <!-- Tab 1: General & Profile Settings -->
-    <div v-if="activeTab === 'general'" class="space-y-6">
-      <!-- Admin Profile Card -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-        <h2 class="text-base font-bold text-[#1a2b4c] border-b border-slate-100 pb-3 flex items-center gap-2">
-          <span>👤</span> Administrator Profile
-        </h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">Full Name</label>
-            <input
-              v-model="adminName"
-              type="text"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#1b1c3e]"
-            />
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">Email Address</label>
-            <input
-              v-model="adminEmail"
-              type="email"
-              disabled
-              class="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium cursor-not-allowed"
-            />
-          </div>
-        </div>
-      </div>
-
-      <!-- Platform Settings Card -->
-      <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-        <h2 class="text-base font-bold text-[#1a2b4c] border-b border-slate-100 pb-3 flex items-center gap-2">
-          <span>⚙️</span> Platform Preferences
-        </h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">Site Name</label>
-            <input
-              v-model="siteName"
-              type="text"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#1b1c3e]"
-            />
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">Support Email</label>
-            <input
-              v-model="supportEmail"
-              type="email"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#1b1c3e]"
-            />
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">Primary Currency</label>
-            <select
-              v-model="currency"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#1b1c3e]"
-            >
-              <option value="KHR">Cambodian Riel (KHR)</option>
-              <option value="USD">US Dollar ($ USD)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">Default Language</label>
-            <select
-              v-model="systemLanguage"
-              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#1b1c3e]"
-            >
-              <option value="en">English</option>
-              <option value="km">Khmer</option>
-            </select>
-          </div>
+  <ClientOnly>
+    <div class="space-y-6 max-w-7xl mx-auto pb-12 text-slate-200">
+      <!-- Header Section -->
+      <div class="bg-[#1a1c23] rounded-2xl p-6 border border-slate-800 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-white tracking-tight flex items-center gap-2.5">
+            <Settings class="w-7 h-7 text-amber-500" />
+            System Settings
+          </h1>
+          <p class="text-sm text-slate-400 mt-1">Manage system configurations, administrator profile, security, and notification preferences.</p>
         </div>
 
-        <div class="pt-2">
-          <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <button
+          @click="handleSave"
+          :disabled="loading"
+          class="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer w-fit"
+        >
+          <Save class="w-4 h-4" />
+          {{ loading ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+
+      <!-- Success / Error Alert Banner -->
+      <Transition name="fade">
+        <div 
+          v-if="showToast" 
+          :class="toastType === 'success' ? 'bg-emerald-950 text-emerald-400 border-emerald-800/60' : 'bg-rose-950 text-rose-400 border-rose-800/60'"
+          class="border px-4 py-3 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-md"
+        >
+          <component :is="toastType === 'success' ? CheckCircle2 : AlertTriangle" class="w-4 h-4 shrink-0" />
+          <span>{{ toastMessage }}</span>
+        </div>
+      </Transition>
+
+      <!-- Navigation Tabs -->
+      <div class="flex bg-[#1a1c23] p-1.5 rounded-2xl border border-slate-800 w-fit gap-1 text-xs font-semibold shadow-md">
+        <button
+          v-for="tab in ([
+            { key: 'general', label: 'General & Profile', icon: User },
+            { key: 'security', label: 'Security & Password', icon: Lock },
+            { key: 'notifications', label: 'Notifications', icon: Bell }
+          ] as const)"
+          :key="tab.key"
+          @click="activeTab = tab.key"
+          :class="activeTab === tab.key ? 'bg-amber-500 text-slate-950 shadow-md font-bold' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'"
+          class="px-4 py-2.5 rounded-xl transition-all uppercase tracking-wider flex items-center gap-2 cursor-pointer"
+        >
+          <component :is="tab.icon" class="w-3.5 h-3.5" />
+          {{ tab.label }}
+        </button>
+      </div>
+
+      <!-- Tab 1: General & Profile Settings -->
+      <div v-if="activeTab === 'general'" class="space-y-6">
+        <!-- Admin Profile Card -->
+        <div class="bg-[#1a1c23] rounded-2xl border border-slate-800 p-6 shadow-md space-y-4">
+          <h2 class="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2 uppercase tracking-wider">
+            <User class="w-4 h-4 text-amber-500" />
+            Administrator Profile
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p class="text-xs font-bold text-slate-800">Allow New Bookings</p>
-              <p class="text-[11px] text-slate-500 mt-0.5">Pause or enable reservations site-wide</p>
+              <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Full Name</label>
+              <input
+                v-model="adminName"
+                type="text"
+                class="w-full bg-[#121318] border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-slate-200 font-medium focus:outline-none focus:border-amber-500 shadow-inner"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Email Address</label>
+              <input
+                v-model="adminEmail"
+                type="email"
+                disabled
+                class="w-full bg-[#121318]/55 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-slate-500 font-medium cursor-not-allowed"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Platform Settings Card -->
+        <div class="bg-[#1a1c23] rounded-2xl border border-slate-800 p-6 shadow-md space-y-4">
+          <h2 class="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2 uppercase tracking-wider">
+            <Settings class="w-4 h-4 text-amber-500" />
+            Platform Preferences
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Site Name</label>
+              <input
+                v-model="siteName"
+                type="text"
+                class="w-full bg-[#121318] border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-slate-200 font-medium focus:outline-none focus:border-amber-500 shadow-inner"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Support Email</label>
+              <input
+                v-model="supportEmail"
+                type="email"
+                class="w-full bg-[#121318] border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-slate-200 font-medium focus:outline-none focus:border-amber-500 shadow-inner"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Primary Currency</label>
+              <select
+                v-model="currency"
+                class="w-full bg-[#121318] border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-slate-200 font-medium focus:outline-none focus:border-amber-500"
+              >
+                <option value="KHR">Cambodian Riel (KHR)</option>
+                <option value="USD">US Dollar ($ USD)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Default Language</label>
+              <select
+                v-model="systemLanguage"
+                class="w-full bg-[#121318] border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-slate-200 font-medium focus:outline-none focus:border-amber-500"
+              >
+                <option value="en">English</option>
+                <option value="km">Khmer</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <div class="flex items-center justify-between bg-[#121318] p-4 rounded-xl border border-slate-700/80">
+              <div>
+                <p class="text-xs font-bold text-white">Allow New Bookings</p>
+                <p class="text-[11px] text-slate-400 mt-0.5">Pause or enable reservations site-wide</p>
+              </div>
+              <input
+                v-model="allowNewBookings"
+                type="checkbox"
+                class="w-5 h-5 accent-amber-500 rounded border-slate-700 focus:ring-amber-500 cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Security Settings -->
+      <div v-else-if="activeTab === 'security'" class="bg-[#1a1c23] rounded-2xl border border-slate-800 p-6 shadow-md space-y-4">
+        <h2 class="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2 uppercase tracking-wider">
+          <Lock class="w-4 h-4 text-amber-500" />
+          Password & Authentication
+        </h2>
+
+        <div class="max-w-md space-y-4">
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Current Password</label>
+            <input
+              v-model="currentPassword"
+              type="password"
+              placeholder="••••••••"
+              class="w-full bg-[#121318] border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 shadow-inner"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">New Password</label>
+            <input
+              v-model="newPassword"
+              type="password"
+              placeholder="••••••••"
+              class="w-full bg-[#121318] border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 shadow-inner"
+            />
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold uppercase text-slate-400 mb-1.5">Confirm New Password</label>
+            <input
+              v-model="confirmPassword"
+              type="password"
+              placeholder="••••••••"
+              class="w-full bg-[#121318] border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500 shadow-inner"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Notifications -->
+      <div v-else class="bg-[#1a1c23] rounded-2xl border border-slate-800 p-6 shadow-md space-y-4">
+        <h2 class="text-sm font-bold text-white border-b border-slate-800 pb-3 flex items-center gap-2 uppercase tracking-wider">
+          <Bell class="w-4 h-4 text-amber-500" />
+          Notification Preferences
+        </h2>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between bg-[#121318] p-4 rounded-xl border border-slate-700/80">
+            <div>
+              <p class="text-xs font-bold text-white">Email Notifications</p>
+              <p class="text-[11px] text-slate-400">Receive administrative updates via email</p>
             </div>
             <input
-              v-model="allowNewBookings"
+              v-model="emailAlerts"
               type="checkbox"
-              class="w-5 h-5 text-[#1b1c3e] rounded border-slate-300 focus:ring-[#1b1c3e] cursor-pointer"
+              class="w-5 h-5 accent-amber-500 rounded border-slate-700 focus:ring-amber-500 cursor-pointer"
+            />
+          </div>
+
+          <div class="flex items-center justify-between bg-[#121318] p-4 rounded-xl border border-slate-700/80">
+            <div>
+              <p class="text-xs font-bold text-white">New Booking Alerts</p>
+              <p class="text-[11px] text-slate-400">Get notified when customers create new bookings</p>
+            </div>
+            <input
+              v-model="bookingAlerts"
+              type="checkbox"
+              class="w-5 h-5 accent-amber-500 rounded border-slate-700 focus:ring-amber-500 cursor-pointer"
+            />
+          </div>
+
+          <div class="flex items-center justify-between bg-[#121318] p-4 rounded-xl border border-slate-700/80">
+            <div>
+              <p class="text-xs font-bold text-white">Weekly Performance Reports</p>
+              <p class="text-[11px] text-slate-400">Send automated analytics reports every Monday</p>
+            </div>
+            <input
+              v-model="reportAlerts"
+              type="checkbox"
+              class="w-5 h-5 accent-amber-500 rounded border-slate-700 focus:ring-amber-500 cursor-pointer"
             />
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Tab 2: Security Settings -->
-    <div v-else-if="activeTab === 'security'" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-      <h2 class="text-base font-bold text-[#1a2b4c] border-b border-slate-100 pb-3 flex items-center gap-2">
-        <span>🔒</span> Password & Authentication
-      </h2>
-
-      <div class="max-w-md space-y-4">
-        <div>
-          <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">Current Password</label>
-          <input
-            v-model="currentPassword"
-            type="password"
-            placeholder="••••••••"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#1b1c3e]"
-          />
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">New Password</label>
-          <input
-            v-model="newPassword"
-            type="password"
-            placeholder="••••••••"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#1b1c3e]"
-          />
-        </div>
-
-        <div>
-          <label class="block text-[11px] font-bold uppercase text-slate-500 mb-1.5">Confirm New Password</label>
-          <input
-            v-model="confirmPassword"
-            type="password"
-            placeholder="••••••••"
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#1b1c3e]"
-          />
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab 3: Notifications -->
-    <div v-else class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
-      <h2 class="text-base font-bold text-[#1a2b4c] border-b border-slate-100 pb-3 flex items-center gap-2">
-        <span>🔔</span> Notification Preferences
-      </h2>
-
-      <div class="space-y-3">
-        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <div>
-            <p class="text-xs font-bold text-slate-800">Email Notifications</p>
-            <p class="text-[11px] text-slate-500">Receive administrative updates via email</p>
-          </div>
-          <input
-            v-model="emailAlerts"
-            type="checkbox"
-            class="w-5 h-5 text-[#1b1c3e] rounded border-slate-300 focus:ring-[#1b1c3e] cursor-pointer"
-          />
-        </div>
-
-        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <div>
-            <p class="text-xs font-bold text-slate-800">New Booking Alerts</p>
-            <p class="text-[11px] text-slate-500">Get notified when customers create new bookings</p>
-          </div>
-          <input
-            v-model="bookingAlerts"
-            type="checkbox"
-            class="w-5 h-5 text-[#1b1c3e] rounded border-slate-300 focus:ring-[#1b1c3e] cursor-pointer"
-          />
-        </div>
-
-        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-200">
-          <div>
-            <p class="text-xs font-bold text-slate-800">Weekly Performance Reports</p>
-            <p class="text-[11px] text-slate-500">Send automated analytics reports every Monday</p>
-          </div>
-          <input
-            v-model="reportAlerts"
-            type="checkbox"
-            class="w-5 h-5 text-[#1b1c3e] rounded border-slate-300 focus:ring-[#1b1c3e] cursor-pointer"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
+  </ClientOnly>
 </template>
 
 <style scoped>

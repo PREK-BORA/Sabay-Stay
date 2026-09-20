@@ -31,6 +31,11 @@ interface GuestUser {
   email: string
   role?: string
   status?: string
+  avatar?: string
+  photoURL?: string
+  image?: string
+  profileImage?: string
+  photo?: string
   createdAt?: any
 }
 
@@ -117,131 +122,148 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="space-y-6 p-6">
-    <!-- Header Section -->
-    <div class="flex justify-between items-center gap-4">
-      <div>
-        <h1 class="text-3xl font-serif font-bold text-slate-950 md:text-4xl">Registered Guests</h1>
-        <p class="text-slate-600 text-base mt-1.5">Manage all registered accounts and user activity.</p>
+  <ClientOnly>
+    <div class="space-y-6 max-w-7xl mx-auto pb-12 text-slate-200">
+      <!-- Header Section -->
+      <div class="bg-[#1a1c23] rounded-2xl p-6 border border-slate-800 shadow-lg flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div>
+          <h1 class="text-3xl font-bold text-white tracking-tight">Registered Users</h1>
+          <p class="text-sm text-slate-400 mt-1">Manage all registered accounts and user activity.</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs bg-amber-500 text-slate-950 font-bold px-3.5 py-1.5 rounded-xl shadow-md w-fit">
+          <Users class="w-4 h-4" />
+          Total: {{ guests.length }} Users
+        </div>
       </div>
-      <div class="flex items-center gap-2.5 text-sm font-semibold bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl shadow-inner border border-indigo-100">
-        <Users class="w-5 h-5" />
-        Total: {{ guests.length }} Users
+
+      <!-- Filters and Search Bar -->
+      <div class="flex flex-col md:flex-row md:items-center gap-4 bg-[#1a1c23] p-4 rounded-2xl border border-slate-800 shadow-md">
+        <div class="relative flex-1">
+          <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+          <input 
+            v-model="searchQuery"
+            type="text" 
+            placeholder="Search guests by name or email..." 
+            class="w-full pl-11 pr-4 py-2.5 bg-[#121318] border border-slate-700/80 rounded-xl text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500 shadow-inner" 
+          />
+        </div>
+        <div class="flex items-center gap-3 w-full md:w-auto">
+          <select 
+            v-model="selectedStatus"
+            class="px-4 py-2.5 bg-[#121318] border border-slate-700/80 rounded-xl text-xs font-medium text-slate-300 focus:outline-none focus:border-amber-500"
+          >
+            <option>All Statuses</option>
+            <option>Pending</option>
+            <option>Approved</option>
+            <option>Active</option>
+            <option>Blocked</option>
+          </select>
+          <button 
+            @click="fetchGuests" 
+            class="flex items-center gap-2 px-4 py-2.5 bg-[#121318] hover:bg-slate-800 text-slate-300 border border-slate-700/80 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
+            :disabled="loading"
+          >
+            <RefreshCw class="w-3.5 h-3.5" :class="{ 'animate-spin': loading }" />
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Users Table Wrapper -->
+      <div class="bg-[#1a1c23] rounded-2xl border border-slate-800 shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-150">
+            <thead>
+              <tr class="bg-[#121318] border-b border-slate-800 text-[11px] text-slate-400 uppercase tracking-wider font-bold">
+                <th class="py-3.5 px-6">User</th>
+                <th class="py-3.5 px-6">Role</th>
+                <th class="py-3.5 px-6">Status</th>
+                <th class="py-3.5 px-6 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60 text-xs">
+              <tr v-for="guest in filteredGuests" :key="guest.id" class="hover:bg-[#222530] transition-colors">
+                <td class="py-4 px-6">
+                  <div class="flex items-center gap-3">
+                    <!-- Avatar Circle or Profile Image -->
+                    <div class="w-10 h-10 rounded-xl bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center border border-slate-700">
+                      <img 
+                        v-if="guest.avatar || guest.photoURL || guest.image || guest.profileImage || guest.photo" 
+                        :src="guest.avatar || guest.photoURL || guest.image || guest.profileImage || guest.photo" 
+                        alt="Guest Avatar" 
+                        class="w-full h-full object-cover" 
+                      />
+                      <span v-else class="text-xs font-bold text-amber-400 uppercase">
+                        {{ (guest.name || guest.fullName || guest.email || 'U').charAt(0) }}
+                      </span>
+                    </div>
+                    <!-- User Info -->
+                    <div>
+                      <p class="font-bold text-white">{{ guest.name || guest.fullName || 'N/A' }}</p>
+                      <div class="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-400">
+                        <Mail class="w-3 h-3" />
+                        {{ guest.email }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-4 px-6 text-slate-300 font-medium">{{ guest.role || 'Guest' }}</td>
+                <td class="py-4 px-6 whitespace-nowrap">
+                  <span 
+                    :class="{
+                      'bg-emerald-950 text-emerald-400 border-emerald-800/60': guest.status === 'Approved' || guest.status === 'Active',
+                      'bg-amber-950 text-amber-400 border-amber-800/60': guest.status === 'Pending',
+                      'bg-rose-950 text-rose-400 border-rose-800/60': guest.status === 'Blocked'
+                    }" 
+                    class="px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider inline-flex items-center gap-1.5"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full" :class="{
+                      'bg-emerald-400': guest.status === 'Approved' || guest.status === 'Active',
+                      'bg-amber-400': guest.status === 'Pending',
+                      'bg-rose-400': guest.status === 'Blocked'
+                    }"></span>
+                    {{ guest.status || 'Active' }}
+                  </span>
+                </td>
+                <td class="py-4 px-6 text-right space-x-2 whitespace-nowrap">
+                  <button 
+                    v-if="guest.status !== 'Approved'"
+                    @click="acceptUser(guest.id)" 
+                    class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <UserCheck class="w-3.5 h-3.5" />
+                    Accept
+                  </button>
+                  <button 
+                    @click="blockUser(guest.id)" 
+                    class="px-3 py-1.5 bg-rose-950 hover:bg-rose-900 text-rose-400 border border-rose-800/60 rounded-lg font-semibold transition-colors cursor-pointer inline-flex items-center gap-1"
+                  >
+                    <UserX class="w-3.5 h-3.5" />
+                    Block
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Loading State inside Table -->
+              <tr v-if="loading">
+                <td colspan="4" class="py-16 text-center text-slate-400 text-xs font-medium">
+                  <div class="inline-flex items-center gap-2">
+                    <div class="w-4 h-4 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"></div>
+                    Loading users from Firestore...
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Empty State inside Table -->
+              <tr v-if="!loading && filteredGuests.length === 0">
+                <td colspan="4" class="py-16 text-center text-slate-500 text-xs font-medium">
+                  No matching users found based on your search filters.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-
-    <!-- Filters and Search Bar -->
-    <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 relative">
-      <Search class="absolute left-8 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 hidden md:block" />
-      <input 
-        v-model="searchQuery"
-        type="text" 
-        placeholder="Search guests by name or email..." 
-        class="w-full md:w-96 px-4 py-2.5 md:pl-11 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-900 transition" 
-      />
-      <div class="flex items-center gap-3 w-full md:w-auto">
-        <select 
-          v-model="selectedStatus"
-          class="flex-1 md:flex-none px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-900 transition"
-        >
-          <option>All Statuses</option>
-          <option>Pending</option>
-          <option>Approved</option>
-          <option>Active</option>
-          <option>Blocked</option>
-        </select>
-        <button 
-          @click="fetchGuests" 
-          class="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold transition-colors disabled:opacity-50"
-          :disabled="loading"
-        >
-          <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
-          Refresh
-        </button>
-      </div>
-    </div>
-
-    <!-- Users Table -->
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-lg overflow-hidden">
-      <table class="w-full text-left text-sm">
-        <thead class="bg-slate-50 border-b border-slate-100 text-slate-600 text-xs uppercase tracking-wider">
-          <tr>
-            <th class="p-5">User</th>
-            <th class="p-5">Role</th>
-            <th class="p-5">Status</th>
-            <th class="p-5 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 text-slate-800">
-          <tr v-for="guest in filteredGuests" :key="guest.id" class="hover:bg-indigo-50/50 transition-colors">
-            <td class="p-5 flex items-center gap-4">
-              <!-- Avatar Circle -->
-              <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-950 flex items-center justify-center font-extrabold text-base shadow-inner border border-indigo-200 shrink-0 uppercase">
-                {{ (guest.name || guest.fullName || guest.email || 'U').charAt(0) }}
-              </div>
-              <!-- User Info -->
-              <div class="flex-1">
-                <p class="font-bold text-slate-950 text-base">{{ guest.name || guest.fullName || 'N/A' }}</p>
-                <div class="flex items-center gap-1.5 mt-0.5 text-xs text-slate-500">
-                    <Mail class="w-3.5 h-3.5" />
-                    {{ guest.email }}
-                </div>
-              </div>
-            </td>
-            <td class="p-5 text-slate-700 font-semibold">{{ guest.role || 'Guest' }}</td>
-            <td class="p-5">
-              <span 
-                :class="{
-                  'bg-emerald-100 text-emerald-800 border-emerald-200': guest.status === 'Approved' || guest.status === 'Active',
-                  'bg-amber-100 text-amber-800 border-amber-200': guest.status === 'Pending',
-                  'bg-rose-100 text-rose-800 border-rose-200': guest.status === 'Blocked'
-                }" 
-                class="px-3 py-1 rounded-full text-xs font-semibold border"
-              >
-                {{ guest.status || 'Active' }}
-              </span>
-            </td>
-            <td class="p-5 text-right space-x-2">
-              <button 
-                v-if="guest.status !== 'Approved'"
-                @click="acceptUser(guest.id)" 
-                class="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition"
-              >
-                <UserCheck class="w-4 h-4" />
-                Accept User
-              </button>
-              <button 
-                @click="blockUser(guest.id)" 
-                class="inline-flex items-center gap-1.5 text-sm font-semibold text-rose-600 hover:text-rose-700 transition"
-              >
-                <UserX class="w-4 h-4" />
-                Block
-              </button>
-            </td>
-          </tr>
-
-          <!-- Loading State inside Table -->
-          <tr v-if="loading">
-            <td colspan="4" class="p-10 text-center text-slate-500">
-              <div class="flex flex-col items-center gap-3">
-                <RefreshCw class="w-8 h-8 animate-spin text-indigo-500" />
-                <span>Loading users from Firestore...</span>
-              </div>
-            </td>
-          </tr>
-
-          <!-- Empty State inside Table -->
-          <tr v-if="!loading && filteredGuests.length === 0">
-            <td colspan="4" class="p-12 text-center text-slate-500">
-              <div class="flex flex-col items-center gap-4">
-                <Users class="w-12 h-12 text-slate-300" />
-                <span class="text-base font-medium">No matching users found.</span>
-                <p class="text-sm text-slate-400">Try adjusting your search or filters.</p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  </ClientOnly>
 </template>

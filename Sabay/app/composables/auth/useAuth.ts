@@ -4,6 +4,7 @@ import { computed, navigateTo, useNuxtApp, useState } from '#imports'
 
 const resolveRole = (role?: string) => {
   if (role === 'super_admin' || role === 'admin') return role
+  if (role === 'owner') return 'owner'
   return 'user'
 }
 
@@ -77,7 +78,9 @@ export const useAuth = () => {
         uid = userCred.user.uid
       }
 
-      const newUser = {
+      const targetCollection = roleValue === 'owner' ? 'owner' : 'user'
+
+      const newUserPayload = {
         id: uid,
         name: userData.name,
         email: userData.email,
@@ -86,32 +89,16 @@ export const useAuth = () => {
         avatar: userData.avatar || '',
         phone: userData.phone || '',
         country: userData.country || 'Cambodia',
+        status: 'active', // Changed from 'Pending' to 'active' for automatic acceptance
         createdAt: new Date().toISOString()
       }
 
-      // 🔴 រក្សាទុកចូល Firestore Database ( Collection 'user' )
+      // 🔴 រក្សាទុកចូល Firestore Database ( Collection 'user' ឬ 'owner' )
       if (db) {
-        await setDoc(doc(db as any, 'user', uid), {
-          name: userData.name,
-          email: userData.email,
-          role: roleValue,
-          permissions: isAdminUser ? ['all'] : ['read'],
-          avatar: userData.avatar || '',
-          phone: userData.phone || '',
-          country: userData.country || 'Cambodia',
-          status: 'Pending',
-          createdAt: new Date().toISOString()
-        })
+        await setDoc(doc(db as any, targetCollection, uid), newUserPayload)
       }
 
-      // រក្សាទុកក្នុង State & LocalStorage
-      setUserSession(newUser)
-
-      if (isAdminUser) {
-        return navigateTo('/admin')
-      } else {
-        return navigateTo('/dashboard')
-      }
+      return { success: true, user: newUserPayload }
     } catch (error) {
       console.error('Error saving user to Firestore:', error)
       throw error
@@ -128,7 +115,7 @@ export const useAuth = () => {
     try {
       let loggedUser: any = {
         id: '',
-        name: isAdminUser ? 'Administrator' : 'User Account',
+        name: isAdminUser ? 'Yoem Makara' : 'User Account',
         email: credentials.email,
         role: roleValue,
         permissions: isAdminUser ? ['all'] : ['read'],
@@ -142,12 +129,15 @@ export const useAuth = () => {
         const profileDocuments = db
           ? await Promise.allSettled([
               getDoc(doc(db as any, 'admin', userCred.user.uid)),
-              getDoc(doc(db as any, 'user', userCred.user.uid))
+              getDoc(doc(db as any, 'user', userCred.user.uid)),
+              getDoc(doc(db as any, 'owner', userCred.user.uid))
             ])
           : []
         const adminDoc = profileDocuments[0]?.status === 'fulfilled' ? profileDocuments[0].value : null
         const userDoc = profileDocuments[1]?.status === 'fulfilled' ? profileDocuments[1].value : null
-        const profileDoc = adminDoc?.exists() ? adminDoc : userDoc
+        const ownerDoc = profileDocuments[2]?.status === 'fulfilled' ? profileDocuments[2].value : null
+        
+        const profileDoc = adminDoc?.exists() ? adminDoc : (userDoc?.exists() ? userDoc : ownerDoc)
 
         if (profileDoc?.exists()) {
           const userDataFromDb = profileDoc.data() as any
