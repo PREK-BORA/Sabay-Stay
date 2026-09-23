@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { definePageMeta } from '#imports'
-
 import { onMounted, ref } from "vue";
 
 definePageMeta({ layout: "user", middleware: "auth" });
@@ -66,23 +65,22 @@ function submitReview() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl space-y-6">
+  <div class="mx-auto max-w-3xl space-y-6 pb-12 text-slate-800 font-sans">
     <div>
-      <h1 class="text-3xl font-bold text-[#1d2f52]">Reviews</h1>
-      <p class="mt-1 text-sm text-[#65728a]">
+      <h1 class="text-3xl font-serif font-bold text-slate-900">Reviews</h1>
+      <p class="mt-1 text-sm text-slate-500 font-medium">
         Share your stay experience with future travelers.
       </p>
     </div>
 
-    <section
-      class="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:p-8"
-    >
-      <h2 class="text-lg font-bold text-[#0d224a]">
+    <!-- Review Form Section -->
+    <section class="rounded-2xl border border-slate-300 bg-white p-6 shadow-sm md:p-8">
+      <h2 class="text-lg font-bold text-slate-900">
         Write a review for The Azure Retreat
       </h2>
       <form class="mt-6 space-y-5" @submit.prevent="submitReview">
         <div>
-          <label class="text-sm font-medium text-[#1d2f52]">Rating</label>
+          <label class="text-sm font-semibold text-slate-700">Rating</label>
           <div class="mt-2 flex items-center gap-1">
             <button
               v-for="star in getStarArray(5)"
@@ -102,26 +100,28 @@ function submitReview() {
             </button>
           </div>
         </div>
-        <label class="block text-sm font-medium text-[#1d2f52]">
+
+        <label class="block text-sm font-semibold text-slate-700">
           Your Review
           <textarea
             v-model="reviewText"
             rows="4"
             required
             placeholder="Tell us about your experience..."
-            class="mt-2 w-full rounded-xl border border-slate-200 bg-[#f7f6f2] px-4 py-3 text-sm outline-none transition focus:border-[#087d72] focus:bg-white"
+            class="mt-2 w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white"
           />
         </label>
+
         <div class="flex items-center gap-4">
           <button
             type="submit"
-            class="rounded-xl bg-[#0d224a] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0a1d3d]"
+            class="rounded-xl bg-[#07166b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-900 border border-indigo-900"
           >
             Submit Review
           </button>
           <span
             v-if="submitted"
-            class="text-sm font-medium text-emerald-700"
+            class="text-sm font-semibold text-emerald-700"
             role="status"
           >
             Review submitted successfully.
@@ -130,25 +130,28 @@ function submitReview() {
       </form>
     </section>
 
+    <!-- Reviews List Section -->
     <section class="space-y-4">
-      <h2 class="text-lg font-bold text-[#0d224a]">Your Reviews</h2>
+      <h2 class="text-lg font-bold text-slate-900">Your Reviews</h2>
+      
       <div
         v-if="reviews.length === 0"
-        class="rounded-2xl bg-white p-8 text-center shadow-sm ring-1 ring-slate-200"
+        class="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center shadow-sm"
       >
-        <p class="text-sm text-[#53637c]">
+        <p class="text-sm font-medium text-slate-500">
           You haven't submitted any reviews yet.
         </p>
       </div>
+
       <article
         v-for="review in reviews"
         :key="review.id"
-        class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-200"
+        class="rounded-2xl border border-slate-300 bg-white p-5 shadow-sm transition hover:shadow-md"
       >
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 class="font-semibold text-[#0d224a]">{{ review.property }}</h3>
-            <p class="mt-1 text-xs text-[#65728a]">{{ review.createdAt }}</p>
+            <h3 class="font-bold text-slate-900">{{ review.property }}</h3>
+            <p class="mt-1 text-xs font-medium text-slate-400">{{ review.createdAt }}</p>
           </div>
           <div class="flex gap-0.5 text-amber-500">
             <span
@@ -160,7 +163,7 @@ function submitReview() {
             </span>
           </div>
         </div>
-        <p class="mt-3 text-sm leading-6 text-[#53637c]">{{ review.text }}</p>
+        <p class="mt-3 text-sm leading-relaxed text-slate-600">{{ review.text }}</p>
       </article>
     </section>
   </div>

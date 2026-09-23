@@ -1,6 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { addDoc, collection, doc, onSnapshot, query, serverTimestamp, where, type Firestore } from "firebase/firestore";
+import { 
+  addDoc, 
+  collection, 
+  doc, 
+  getDocs, 
+  onSnapshot, 
+  query, 
+  serverTimestamp, 
+  where, 
+  type Firestore 
+} from "firebase/firestore";
 import { navigateTo, useNuxtApp, useRoute } from "#imports";
 import {
   ArrowLeft,
@@ -202,8 +212,11 @@ async function bookNow() {
     return;
   }
 
+  // Local constants capture state for safe usage across async calls
+  const currentHotel = hotel.value;
   const room = selectedRoom.value;
   isBooking.value = true;
+
   try {
     const price = room?.price || lowestPrice.value;
     const total = price * bookingNights.value;
@@ -211,10 +224,10 @@ async function bookNow() {
       userId: user.value.id,
       guestName: user.value.name || "Guest traveler",
       guestEmail: user.value.email || "",
-      hotelId: hotel.value.id,
-      hotelName: hotel.value.name,
-      location: hotel.value.location,
-      image: hotel.value.image,
+      hotelId: currentHotel.id,
+      hotelName: currentHotel.name,
+      location: currentHotel.location,
+      image: currentHotel.image,
       roomId: room?.id || "",
       roomName: room?.title || "Standard room",
       guests: guests.value,
@@ -228,8 +241,13 @@ async function bookNow() {
       createdAt: serverTimestamp(),
     });
 
-    const userMessage = `Your request for ${hotel.value.name}${room ? ` (${room.title})` : ""} was received. We will notify you when it is confirmed.`;
-    await Promise.all([
+    const userMessage = `Your request for ${currentHotel.name}${room ? ` (${room.title})` : ""} was received. We will notify you when it is confirmed.`;
+
+    const adminSnapshot = await getDocs(
+      query(collection(db, "users"), where("role", "==", "admin"))
+    );
+
+    const notificationPromises: Promise<any>[] = [
       addDoc(collection(db, "notifications"), {
         recipientId: user.value.id,
         actorId: user.value.id,
@@ -241,18 +259,25 @@ async function bookNow() {
         isRead: false,
         createdAt: serverTimestamp(),
       }),
-      addDoc(collection(db, "notifications"), {
-        recipientId: "admin",
-        actorId: user.value.id,
-        recipientRole: "admin",
-        bookingId: bookingRef.id,
-        type: "booking",
-        title: "New booking request",
-        message: `${user.value.name || user.value.email || "A guest"} requested ${hotel.value.name}${room ? ` — ${room.title}` : ""}.`,
-        isRead: false,
-        createdAt: serverTimestamp(),
-      }),
-    ]);
+    ];
+
+    adminSnapshot.forEach((adminDoc) => {
+      notificationPromises.push(
+        addDoc(collection(db, "notifications"), {
+          recipientId: adminDoc.id,
+          actorId: user.value.id,
+          recipientRole: "admin",
+          bookingId: bookingRef.id,
+          type: "booking",
+          title: "New booking request",
+          message: `${user.value.name || user.value.email || "A guest"} requested ${currentHotel.name}${room ? ` — ${room.title}` : ""}.`,
+          isRead: false,
+          createdAt: serverTimestamp(),
+        })
+      );
+    });
+
+    await Promise.all(notificationPromises);
     bookingSuccess.value = "Booking request sent. You can view it in Dashboard → Bookings.";
   } catch (bookingFailure) {
     console.error("Unable to create booking", bookingFailure);

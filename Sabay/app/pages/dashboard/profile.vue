@@ -26,12 +26,35 @@ const photoPreview = ref<string>(
 );
 const isUploading = ref(false);
 
+// Preset list of countries
+const countries = [
+  "Cambodia",
+  "United States",
+  "United Kingdom",
+  "Australia",
+  "Canada",
+  "China",
+  "France",
+  "Germany",
+  "Hong Kong",
+  "India",
+  "Indonesia",
+  "Japan",
+  "Laos",
+  "Malaysia",
+  "Myanmar",
+  "Philippines",
+  "Singapore",
+  "South Korea",
+  "Vietnam",
+];
+
 onMounted(() => {
   const stored = JSON.parse(localStorage.getItem("sabaystay-user") || "null");
   name.value = stored?.name || user.value?.name || "";
   email.value = stored?.email || user.value?.email || "";
   phone.value = stored?.phone || "";
-  country.value = stored?.country || "";
+  country.value = stored?.country || "Cambodia";
   if (stored?.photo) {
     photoPreview.value = stored.photo;
   }
@@ -71,25 +94,26 @@ function saveProfile() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl space-y-6">
+  <div class="mx-auto max-w-6xl space-y-6 pb-12 font-sans text-slate-800">
     <div>
-      <h1 class="text-3xl font-bold text-slate-900">My Profile</h1>
-      <p class="mt-1 text-sm text-slate-500">
+      <h1 class="font-serif text-3xl font-bold text-slate-900">My Profile</h1>
+      <p class="mt-1 text-sm font-medium text-slate-500">
         Manage your personal information and preferences.
       </p>
     </div>
 
-    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+    <!-- Profile Photo Section -->
+    <section class="rounded-2xl border border-slate-300 bg-white p-6 shadow-sm md:p-8">
       <div class="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
         <div class="relative">
           <img
             :src="photoPreview"
             alt="Profile photo"
-            class="h-28 w-28 rounded-full object-cover ring-4 ring-slate-100"
+            class="h-28 w-28 rounded-full object-cover border border-slate-300 ring-4 ring-slate-100"
           />
           <label
             for="photo-upload"
-            class="absolute -bottom-1 -right-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[#07166b] text-white shadow-md transition hover:bg-indigo-700"
+            class="absolute -bottom-1 -right-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[#07166b] text-white shadow-md transition hover:bg-indigo-900 border border-indigo-900"
             title="Change photo"
           >
             <Camera class="h-4 w-4" />
@@ -107,7 +131,7 @@ function saveProfile() {
           <p class="mt-1 text-sm text-slate-500">
             JPG, PNG or GIF. Max 5MB.
           </p>
-          <p v-if="isUploading" class="mt-2 flex items-center justify-center gap-1.5 text-xs text-indigo-600 sm:justify-start">
+          <p v-if="isUploading" class="mt-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-[#07166b] sm:justify-start">
             <Loader2 class="h-3.5 w-3.5 animate-spin" />
             Uploading...
           </p>
@@ -115,7 +139,8 @@ function saveProfile() {
       </div>
     </section>
 
-    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+    <!-- Personal Information Form Section -->
+    <section class="rounded-2xl border border-slate-300 bg-white p-6 shadow-sm md:p-8">
       <h2 class="text-lg font-bold text-slate-900">Personal Information</h2>
       
       <form class="mt-6 grid gap-5 sm:grid-cols-2" @submit.prevent="saveProfile">
@@ -127,7 +152,7 @@ function saveProfile() {
               v-model="name"
               required
               placeholder="e.g. John Doe"
-              class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
+              class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
             />
           </div>
         </label>
@@ -141,7 +166,7 @@ function saveProfile() {
               type="email"
               required
               placeholder="e.g. johndoe@example.com"
-              class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
+              class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
             />
           </div>
         </label>
@@ -155,7 +180,7 @@ function saveProfile() {
               type="tel"
               required
               placeholder="e.g. +855 12 345 678"
-              class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
+              class="h-11 w-full rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
             />
           </div>
         </label>
@@ -163,20 +188,24 @@ function saveProfile() {
         <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">
           Country
           <div class="relative mt-2 flex items-center">
-            <Globe class="absolute left-3.5 h-4 w-4 text-slate-400" />
-            <input
+            <Globe class="absolute left-3.5 h-4 w-4 text-slate-400 z-10 pointer-events-none" />
+            <select
               v-model="country"
               required
-              placeholder="e.g. Cambodia"
-              class="h-11 w-full rounded-xl border border-slate-200 bg-slate-50 pl-10 pr-4 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
-            />
+              class="h-11 w-full appearance-none rounded-xl border border-slate-300 bg-slate-50 pl-10 pr-8 text-sm font-normal text-slate-800 outline-none transition focus:border-[#07166b] focus:bg-white focus:ring-1 focus:ring-[#07166b]"
+            >
+              <option value="" disabled>Select a country</option>
+              <option v-for="c in countries" :key="c" :value="c">
+                {{ c }}
+              </option>
+            </select>
           </div>
         </label>
 
         <div class="flex items-center gap-4 sm:col-span-2 mt-2">
           <button
             type="submit"
-            class="inline-flex items-center gap-2 rounded-xl bg-[#07166b] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-900"
+            class="inline-flex items-center gap-2 rounded-xl bg-[#07166b] px-6 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-900 border border-indigo-900 cursor-pointer"
           >
             <Save class="h-4 w-4" />
             <span>Save Changes</span>
@@ -184,7 +213,7 @@ function saveProfile() {
 
           <span
             v-if="saved"
-            class="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600"
+            class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700"
             role="status"
           >
             <CheckCircle2 class="h-4 w-4" />

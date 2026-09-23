@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { useRoute } from "#app";
+// Import Lucide Icons
+import { BedDouble } from 'lucide-vue-next';
 
 const route = useRoute();
 const selectedGuests = ref("2 adults, 0 children");
@@ -343,9 +345,9 @@ const stays = [
                 </p>
               </div>
               <div
-                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf1fb] text-2xl"
+                class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#eaf1fb] text-[#07166b]"
               >
-                🛏️
+                <BedDouble class="w-6 h-6" />
               </div>
             </div>
 
