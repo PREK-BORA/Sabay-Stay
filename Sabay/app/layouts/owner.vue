@@ -3,7 +3,7 @@
     <!-- Mobile Top Navigation Bar -->
     <header class="md:hidden bg-white border-b border-gray-100 p-4 flex items-center justify-between">
       <NuxtLink to="/owner/owner_dashboard" class="text-xl font-serif font-bold text-indigo-950">
-        SabayStay 
+        SabayStay <span class="text-xs font-sans px-2 py-0.5 rounded bg-amber-100 text-amber-800 ml-1">Owner</span>
       </NuxtLink>
       <button 
         @click="mobileMenuOpen = !mobileMenuOpen" 
@@ -24,7 +24,7 @@
       <div>
         <!-- Brand Logo (Desktop) -->
         <NuxtLink to="/owner/owner_dashboard" class="hidden md:block text-2xl font-serif font-bold text-indigo-950 mb-8">
-          SabayStay <span class="text-xs font-sans px-2 py-0.5 rounded bg-amber-100 text-amber-800 ml-1">Owner</span>
+          SabayStay 
         </NuxtLink>
 
         <!-- Navigation Links -->
@@ -103,7 +103,6 @@
           <Globe class="w-5 h-5 text-gray-500" />
           User View
         </NuxtLink>
-
         <button 
           @click="handleExit" 
           class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
@@ -150,7 +149,7 @@ const mobileMenuOpen = ref(false)
 const handleExit = async () => {
   try {
     await logout()
-    router.push('/login')
+    router.push('/auth/login')
   } catch (err) {
     console.error('Logout error:', err)
   }

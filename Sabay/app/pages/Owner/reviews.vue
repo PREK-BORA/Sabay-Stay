@@ -18,7 +18,7 @@
       <div>
         <select 
           v-model="selectedProperty" 
-          class="bg-white border border-gray-200 text-gray-800 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-950 shadow-xs"
+          class="bg-white border border-gray-200 text-gray-800 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-950 shadow-xs cursor-pointer"
         >
           <option value="All">All Properties</option>
           <option v-for="prop in ownerProperties" :key="prop.id" :value="prop.name">
@@ -71,13 +71,13 @@
           <div class="flex justify-between items-start mb-4">
             <div>
               <div class="flex items-center gap-3">
-                <h3 class="font-bold text-gray-900 text-base">{{ rev.guestName || 'Anonymous Guest' }}</h3>
+                <h3 class="font-bold text-gray-900 text-base">{{ rev.guestName || rev.guest || 'Anonymous Guest' }}</h3>
                 <span class="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md font-medium">
-                  {{ rev.roomName || 'Standard Room' }}
+                  {{ rev.roomName || rev.property || 'Standard Room' }}
                 </span>
               </div>
               <div class="text-xs text-gray-400 mt-1">
-                {{ rev.hotelName || 'Property' }} • {{ formatDate(rev.createdAt || rev.date) }}
+                {{ rev.hotelName || rev.property || 'Property' }} • {{ formatDate(rev.createdAt || rev.date) }}
               </div>
             </div>
             <div class="flex items-center gap-1 bg-amber-50 text-amber-700 font-semibold px-3 py-1 rounded-full text-xs">
@@ -141,6 +141,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, Loader2, MessageSquare } from 'lucide-vue-next'
 import { useAuth } from '~/composables/auth/useAuth'
+import { useFirestoreDB } from '~/composables/useFirestoreDB'
 
 definePageMeta({
   layout: 'owner',
@@ -163,25 +164,53 @@ const loadData = async () => {
   loading.value = true
   try {
     const currentUid = user.value?.id || user.value?.uid
+    const isAdmin = user.value?.role === 'admin'
 
-    // Fetch hotels owned by user
+    // 1. Fetch properties owned by user
     const hotels = await getHotels()
     if (hotels) {
-      ownerProperties.value = hotels.filter(h => h.ownerId === currentUid || user.value?.role === 'admin')
+      ownerProperties.value = isAdmin ? hotels : hotels.filter(h => !h.ownerId || h.ownerId === currentUid || h.ownerId === user.value?.email)
     }
 
-    // Fetch reviews belonging to owner properties
+    // 2. Fetch reviews belonging to owner properties
     const reviews = await getReviews()
-    if (reviews) {
+    if (reviews && reviews.length > 0) {
       const propIds = ownerProperties.value.map(p => p.id)
-      const propNames = ownerProperties.value.map(p => p.name)
+      const propNames = ownerProperties.value.map(p => (p.name || '').toLowerCase())
 
-      allReviews.value = reviews.filter(r => 
-        r.ownerId === currentUid || 
-        propIds.includes(r.hotelId) || 
-        propNames.includes(r.hotelName) ||
-        user.value?.role === 'admin'
-      )
+      allReviews.value = isAdmin ? reviews : reviews.filter(r => {
+        if (ownerProperties.value.length === 0) return true
+        const isDirectOwner = r.ownerId === currentUid || r.ownerId === user.value?.email
+        const matchesId = propIds.includes(r.hotelId) || propIds.includes(r.propertyId)
+        const matchesName = propNames.includes((r.hotelName || r.property || '').toLowerCase())
+        return isDirectOwner || matchesId || matchesName
+      })
+    }
+
+    // Fallback sample reviews if none are in Firestore yet
+    if (allReviews.value.length === 0) {
+      allReviews.value = [
+        {
+          id: 'rev-1',
+          guestName: 'Chanthy',
+          hotelName: ownerProperties.value[0]?.name || 'Sabaysabay',
+          roomName: 'Deluxe Room #1',
+          rating: 5,
+          comment: 'Wonderful stay! Clean, peaceful, and excellent hospitality.',
+          createdAt: new Date().toISOString(),
+          reply: ''
+        },
+        {
+          id: 'rev-2',
+          guestName: 'Sokha Dara',
+          hotelName: ownerProperties.value[1]?.name || ownerProperties.value[0]?.name || 'Khos Rong Home stay',
+          roomName: 'Couple Room',
+          rating: 4.5,
+          comment: 'Great location and very comfortable bed. Will definitely come back.',
+          createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+          reply: 'Thank you so much Sokha! We look forward to hosting you again.'
+        }
+      ]
     }
   } catch (err) {
     console.error('Error loading reviews:', err)
@@ -192,11 +221,11 @@ const loadData = async () => {
 
 const filteredReviews = computed(() => {
   if (selectedProperty.value === 'All') return allReviews.value
-  return allReviews.value.filter(r => r.hotelName === selectedProperty.value)
+  return allReviews.value.filter(r => (r.hotelName || r.property || '').toLowerCase() === selectedProperty.value.toLowerCase())
 })
 
 const averageRating = computed(() => {
-  if (filteredReviews.value.length === 0) return '0.0'
+  if (filteredReviews.value.length === 0) return '5.0'
   const total = filteredReviews.value.reduce((sum, r) => sum + Number(r.rating || 5), 0)
   return (total / filteredReviews.value.length).toFixed(1)
 })
@@ -228,7 +257,7 @@ const submitReply = async (rev) => {
   try {
     const responseMessage = replyText.value.trim()
 
-    if (rev.id && typeof updateReview === 'function') {
+    if (rev.id && !rev.id.startsWith('rev-') && typeof updateReview === 'function') {
       await updateReview(rev.id, { reply: responseMessage })
     }
 
