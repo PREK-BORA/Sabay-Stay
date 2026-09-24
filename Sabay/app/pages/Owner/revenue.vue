@@ -1,177 +1,299 @@
 <template>
   <div class="p-6 bg-gray-50 min-h-screen">
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
       <div>
+        <NuxtLink 
+          to="/owner/owner_dashboard" 
+          class="text-xs font-semibold text-gray-500 hover:text-indigo-950 flex items-center gap-1.5 transition mb-2"
+        >
+          <ArrowLeft class="w-4 h-4" />
+          Back to Overview
+        </NuxtLink>
         <h1 class="text-3xl font-serif font-bold text-gray-900">Revenue Overview</h1>
         <p class="text-gray-500 text-sm mt-1">Track your earnings, analyze trends, and optimize your pricing strategy.</p>
       </div>
+
       <div class="flex gap-3">
-        <select class="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-700 font-medium">
-          <option>Year to Date (2026)</option>
+        <select 
+          v-model="selectedYear" 
+          class="bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-700 font-medium outline-none shadow-xs"
+        >
+          <option value="2026">Year 2026</option>
+          <option value="All">All Time</option>
         </select>
-        <button class="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-700 font-medium flex items-center gap-2">
-          📥 Export
+
+        <button 
+          @click="exportReport" 
+          class="bg-white hover:bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm text-gray-700 font-medium flex items-center gap-2 transition shadow-xs cursor-pointer"
+        >
+          <Download class="w-4 h-4 text-gray-500" />
+          Export Report
         </button>
       </div>
     </div>
 
-    <!-- Stat Boxes -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-      <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-        <span class="text-xs text-gray-400 font-semibold block mb-2 uppercase tracking-wide">Total Earnings</span>
-        <div class="flex items-baseline justify-between">
-          <h3 class="text-3xl font-serif font-bold text-gray-900">$124,500</h3>
-          <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">+14.2% vs last period</span>
-        </div>
-      </div>
-
-      <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-        <span class="text-xs text-gray-400 font-semibold block mb-2 uppercase tracking-wide">Net Payouts</span>
-        <div class="flex items-baseline justify-between">
-          <h3 class="text-3xl font-serif font-bold text-gray-900">$108,315</h3>
-          <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">+12.5% vs last period</span>
-        </div>
-      </div>
-
-      <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-sm">
-        <span class="text-xs text-gray-400 font-semibold block mb-2 uppercase tracking-wide">Pending Payouts</span>
-        <h3 class="text-3xl font-serif font-bold text-gray-900">$16,185</h3>
-        <p class="text-xs text-gray-400 mt-1">Next payout: Oct 18, 2026 ($4,200) • <a href="#" class="underline">View details</a></p>
-      </div>
+    <!-- Loading State -->
+    <div v-if="loading" class="bg-white rounded-xl border border-gray-100 p-12 text-center text-sm text-gray-500 shadow-xs mb-8">
+      <Loader2 class="w-6 h-6 animate-spin mx-auto text-indigo-950 mb-2" />
+      Calculating financial metrics...
     </div>
 
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-      <!-- Revenue Over Time -->
-      <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-        <div class="flex justify-between items-center mb-6">
-          <h2 class="font-serif text-lg font-bold text-gray-900">Revenue Over Time</h2>
-          <div class="flex text-xs bg-gray-100 p-1 rounded-md">
-            <button class="px-3 py-1 bg-white rounded shadow-xs font-semibold">Monthly</button>
-            <button class="px-3 py-1 text-gray-500">Quarterly</button>
+    <template v-else>
+      <!-- Stat Boxes -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-xs">
+          <span class="text-xs text-gray-400 font-semibold block mb-2 uppercase tracking-wide">Total Gross Earnings</span>
+          <div class="flex items-baseline justify-between">
+            <h3 class="text-3xl font-serif font-bold text-gray-900">${{ totalEarnings.toLocaleString() }}</h3>
+            <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">Gross</span>
           </div>
         </div>
-        <!-- Bar Chart Representation -->
-        <div class="h-48 flex items-end justify-between gap-3 pt-6 border-b border-gray-100">
-          <div v-for="(bar, i) in monthlyBars" :key="i" class="flex-1 flex flex-col items-center gap-2">
-            <div :style="{ height: bar.height }" :class="bar.highlight ? 'bg-indigo-950' : 'bg-indigo-200'" class="w-full rounded-t-sm transition-all"></div>
-            <span class="text-xs text-gray-400">{{ bar.month }}</span>
+
+        <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-xs">
+          <span class="text-xs text-gray-400 font-semibold block mb-2 uppercase tracking-wide">Net Payouts (90%)</span>
+          <div class="flex items-baseline justify-between">
+            <h3 class="text-3xl font-serif font-bold text-gray-900">${{ netPayouts.toLocaleString() }}</h3>
+            <span class="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">After 10% Fee</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-xs">
+          <span class="text-xs text-gray-400 font-semibold block mb-2 uppercase tracking-wide">Pending Earnings</span>
+          <h3 class="text-3xl font-serif font-bold text-amber-600">${{ pendingEarnings.toLocaleString() }}</h3>
+          <p class="text-xs text-gray-400 mt-1">
+            {{ pendingBookingsCount }} unconfirmed/pending reservation(s)
+          </p>
+        </div>
+      </div>
+
+      <!-- Charts & Breakdown Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Revenue Over Time Bar Chart -->
+        <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-xs">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="font-serif text-lg font-bold text-gray-900">Monthly Revenue Distribution</h2>
+            <span class="text-xs text-gray-400">Monthly breakdown for {{ selectedYear }}</span>
+          </div>
+
+          <div class="h-48 flex items-end justify-between gap-2 pt-6 border-b border-gray-100">
+            <div v-for="(bar, i) in monthlyBars" :key="i" class="flex-1 flex flex-col items-center gap-2">
+              <div 
+                :style="{ height: bar.height }" 
+                :class="bar.rawAmount > 0 ? 'bg-indigo-950' : 'bg-gray-100'" 
+                class="w-full rounded-t-sm transition-all"
+                :title="`$${bar.rawAmount.toLocaleString()}`"
+              ></div>
+              <span class="text-xs text-gray-400">{{ bar.month }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revenue by Source + Smart Insights -->
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-xs">
+            <h2 class="font-serif text-lg font-bold text-gray-900 mb-4">Revenue Channel Share</h2>
+            <div class="space-y-3 text-xs">
+              <div>
+                <div class="flex justify-between mb-1">
+                  <span>SabayStay Direct</span>
+                  <span class="font-bold">75%</span>
+                </div>
+                <div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="bg-indigo-950 h-full w-[75%]"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between mb-1">
+                  <span>Partner Channels</span>
+                  <span class="font-bold">15%</span>
+                </div>
+                <div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="bg-emerald-500 h-full w-[15%]"></div></div>
+              </div>
+              <div>
+                <div class="flex justify-between mb-1">
+                  <span>Direct Walk-in / Corporate</span>
+                  <span class="font-bold">10%</span>
+                </div>
+                <div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="bg-amber-400 h-full w-[10%]"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-indigo-50/50 p-5 rounded-xl border border-indigo-100">
+            <h3 class="text-xs font-bold text-indigo-950 uppercase mb-2 flex items-center gap-1">✨ Smart Insights</h3>
+            <p class="text-xs text-indigo-900 leading-relaxed">
+              You have <strong>{{ propertyPerformance.length }}</strong> active properties registered. Keep rates updated for peak weekend periods to optimize yield.
+            </p>
           </div>
         </div>
       </div>
 
-      <!-- Revenue by Source + Smart Insights -->
-      <div class="space-y-6">
-        <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <h2 class="font-serif text-lg font-bold text-gray-900 mb-4">Revenue by Source</h2>
-          <div class="space-y-3 text-xs">
-            <div>
-              <div class="flex justify-between mb-1">
-                <span>SabayStay Direct</span>
-                <span class="font-bold">65%</span>
-              </div>
-              <div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="bg-indigo-950 h-full w-[65%]"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span>Partner Networks</span>
-                <span class="font-bold">25%</span>
-              </div>
-              <div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="bg-emerald-500 h-full w-[25%]"></div></div>
-            </div>
-            <div>
-              <div class="flex justify-between mb-1">
-                <span>Corporate Stays</span>
-                <span class="font-bold">10%</span>
-              </div>
-              <div class="w-full bg-gray-100 h-1.5 rounded-full"><div class="bg-amber-400 h-full w-[10%]"></div></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-indigo-50/50 p-5 rounded-xl border border-indigo-100">
-          <h3 class="text-xs font-bold text-indigo-950 uppercase mb-2 flex items-center gap-1">✨ Smart Insights</h3>
-          <p class="text-xs text-indigo-900 leading-relaxed">Based on upcoming local events, we suggest increasing your weekend rates for <strong>Villa Azul</strong> by 15% next month.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Lower Section: Property Performance & Recent Payouts -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Property Performance -->
-      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-        <h2 class="font-serif text-lg font-bold text-gray-900 mb-4">Property Performance</h2>
+      <!-- Lower Section: Property Performance -->
+      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-xs">
+        <h2 class="font-serif text-lg font-bold text-gray-900 mb-4">Property Performance Breakdown</h2>
         <div class="space-y-4">
-          <div v-for="prop in properties" :key="prop.name" class="flex items-center justify-between pb-3 border-b border-gray-50 last:border-0">
+          <div 
+            v-for="prop in propertyPerformance" 
+            :key="prop.id" 
+            class="flex items-center justify-between pb-3 border-b border-gray-50 last:border-0"
+          >
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+              <div class="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-950 font-serif font-bold text-sm">
+                {{ prop.name?.substring(0, 2).toUpperCase() || 'P' }}
+              </div>
               <div>
                 <p class="text-sm font-semibold text-gray-900">{{ prop.name }}</p>
-                <p class="text-xs text-gray-400">{{ prop.location }}</p>
+                <p class="text-xs text-gray-400">{{ prop.location || 'Property location' }}</p>
               </div>
             </div>
+
             <div class="text-right">
-              <p class="text-sm font-bold text-gray-900">${{ prop.revenue }}</p>
-              <p class="text-xs text-gray-400">{{ prop.bookings }} Bookings</p>
+              <p class="text-sm font-bold text-gray-900">${{ prop.revenue.toLocaleString() }}</p>
+              <p class="text-xs text-gray-400">{{ prop.bookingsCount }} Booking(s)</p>
             </div>
+          </div>
+
+          <div v-if="propertyPerformance.length === 0" class="py-6 text-center text-xs text-gray-400">
+            No property performance data found.
           </div>
         </div>
       </div>
-
-      <!-- Recent Payouts -->
-      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-        <h2 class="font-serif text-lg font-bold text-gray-900 mb-4">Recent Payouts</h2>
-        <table class="w-full text-left text-xs">
-          <thead>
-            <tr class="text-gray-400 border-b border-gray-100">
-              <th class="pb-2 font-medium">Date</th>
-              <th class="pb-2 font-medium">Amount</th>
-              <th class="pb-2 font-medium">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="payout in payouts" :key="payout.date" class="border-b border-gray-50">
-              <td class="py-3 text-gray-600">{{ payout.date }}</td>
-              <td class="py-3 font-bold text-gray-900">${{ payout.amount }}</td>
-              <td class="py-3">
-                <span :class="payout.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'" class="px-2 py-0.5 rounded-full font-medium">
-                  {{ payout.status }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    </template>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-
-const monthlyBars = ref([
-  { month: 'Jan', height: '40%' },
-  { month: 'Feb', height: '45%' },
-  { month: 'Mar', height: '60%' },
-  { month: 'Apr', height: '70%' },
-  { month: 'May', height: '90%', highlight: true },
-  { month: 'Jun', height: '80%' }
-])
-
-const properties = ref([
-  { name: 'Villa Azul', location: 'Uluwatu, Bali', revenue: '62,400', bookings: 52 },
-  { name: 'The Skyline Loft', location: 'Downtown, NY', revenue: '45,100', bookings: 38 },
-  { name: 'Palm Hideaway', location: 'Tulum, MX', revenue: '17,000', bookings: 15 }
-])
-
-const payouts = ref([
-  { date: 'Sep 15, 2026', amount: '8,450.00', status: 'Paid' },
-  { date: 'Sep 01, 2026', amount: '9,200.00', status: 'Paid' },
-  { date: 'Aug 15, 2026', amount: '12,100.00', status: 'Paid' }
-])
+import { ref, computed, onMounted } from 'vue'
+import { ArrowLeft, Download, Loader2 } from 'lucide-vue-next'
+import { useAuth } from '~/composables/auth/useAuth'
 
 definePageMeta({
-  layout: 'owner'
+  layout: 'owner',
+  middleware: ['owner']
+})
+
+const { user } = useAuth()
+const { getHotels, getBookings } = useFirestoreDB()
+
+const loading = ref(true)
+const selectedYear = ref('2026')
+const ownerProperties = ref([])
+const ownerBookings = ref([])
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+// Calculations
+const confirmedBookings = computed(() => {
+  return ownerBookings.value.filter(b => {
+    const s = (b.status || '').toLowerCase()
+    return s === 'confirmed' || s === 'completed'
+  })
+})
+
+const totalEarnings = computed(() => {
+  return confirmedBookings.value.reduce((sum, b) => {
+    const amount = Number(b.totalPrice || b.price || 0)
+    return sum + (isNaN(amount) ? 0 : amount)
+  }, 0)
+})
+
+const netPayouts = computed(() => Math.round(totalEarnings.value * 0.9))
+
+const pendingBookingsCount = computed(() => {
+  return ownerBookings.value.filter(b => (b.status || 'pending').toLowerCase() === 'pending').length
+})
+
+const pendingEarnings = computed(() => {
+  return ownerBookings.value
+    .filter(b => (b.status || 'pending').toLowerCase() === 'pending')
+    .reduce((sum, b) => {
+      const amount = Number(b.totalPrice || b.price || 0)
+      return sum + (isNaN(amount) ? 0 : amount)
+    }, 0)
+})
+
+const monthlyBars = computed(() => {
+  const totals = Array(12).fill(0)
+
+  confirmedBookings.value.forEach(b => {
+    const d = new Date(b.checkIn || b.createdAt || Date.now())
+    if (!isNaN(d.getTime())) {
+      totals[d.getMonth()] += Number(b.totalPrice || b.price || 0)
+    }
+  })
+
+  const maxVal = Math.max(...totals, 1)
+
+  return MONTH_NAMES.map((month, idx) => {
+    const val = totals[idx]
+    const percent = Math.max(Math.round((val / maxVal) * 100), 10)
+    return {
+      month,
+      rawAmount: val,
+      height: `${val > 0 ? percent : 8}%`
+    }
+  })
+})
+
+const propertyPerformance = computed(() => {
+  return ownerProperties.value.map(prop => {
+    const propBookings = confirmedBookings.value.filter(b => 
+      b.hotelId === prop.id || b.property === prop.name || b.hotelName === prop.name
+    )
+    const rev = propBookings.reduce((sum, b) => sum + Number(b.totalPrice || b.price || 0), 0)
+    
+    return {
+      id: prop.id,
+      name: prop.name || prop.title || 'Untitled Property',
+      location: prop.location || prop.city || 'Unknown',
+      revenue: rev,
+      bookingsCount: propBookings.length
+    }
+  })
+})
+
+const exportReport = () => {
+  const csvRows = [
+    ['Property', 'Location', 'Bookings', 'Total Revenue ($)'],
+    ...propertyPerformance.value.map(p => [p.name, p.location, p.bookingsCount, p.revenue])
+  ]
+  
+  const csvContent = 'data:text/csv;charset=utf-8,' + csvRows.map(e => e.join(',')).join('\n')
+  const encodedUri = encodeURI(csvContent)
+  const link = document.createElement('a')
+  link.setAttribute('href', encodedUri)
+  link.setAttribute('download', `SabayStay_Revenue_Report_${selectedYear.value}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+const loadData = async () => {
+  loading.value = true
+  try {
+    const currentUid = user.value?.id || user.value?.uid
+
+    // 1. Fetch properties owned by user
+    const hotels = await getHotels()
+    if (hotels) {
+      ownerProperties.value = hotels.filter(h => h.ownerId === currentUid || user.value?.role === 'admin')
+    }
+
+    // 2. Fetch reservations belonging to owner
+    const allBookings = await getBookings()
+    if (allBookings) {
+      const propIds = ownerProperties.value.map(p => p.id)
+      ownerBookings.value = allBookings.filter(b => 
+        b.ownerId === currentUid || propIds.includes(b.hotelId) || user.value?.role === 'admin'
+      )
+    }
+  } catch (err) {
+    console.error('Error fetching revenue data:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadData()
 })
 </script>

@@ -28,6 +28,7 @@ export const useAuth = () => {
 
   const isLoggedIn = computed(() => !!user.value)
   const isAdmin = computed(() => isAdminRole(user.value?.role))
+  const isOwner = computed(() => user.value?.role === 'owner')
 
   // Helper function to update reactive state and localStorage safely
   const setUserSession = (userData: any) => {
@@ -54,7 +55,7 @@ export const useAuth = () => {
     }
   }
 
-  // 1. មុខងារ Register + រក្សាទុកក្នុង Firebase Firestore
+  // 1. Register Function + Save to Firebase Firestore
   const register = async (userData: { 
     name: string; 
     email: string; 
@@ -72,7 +73,6 @@ export const useAuth = () => {
     try {
       let uid = String(Date.now())
 
-      // ប្រសិនបើប្រើ Firebase Auth
       if (auth && userData.password) {
         const userCred = await createUserWithEmailAndPassword(auth as any, userData.email, userData.password)
         uid = userCred.user.uid
@@ -80,20 +80,25 @@ export const useAuth = () => {
 
       const targetCollection = roleValue === 'owner' ? 'owner' : 'user'
 
+      const defaultPermissions = isAdminUser 
+        ? ['all'] 
+        : roleValue === 'owner' 
+          ? ['read', 'write', 'manage_hotels'] 
+          : ['read']
+
       const newUserPayload = {
         id: uid,
         name: userData.name,
         email: userData.email,
         role: roleValue,
-        permissions: isAdminUser ? ['all'] : ['read'],
+        permissions: defaultPermissions,
         avatar: userData.avatar || '',
         phone: userData.phone || '',
         country: userData.country || 'Cambodia',
-        status: 'active', // Changed from 'Pending' to 'active' for automatic acceptance
+        status: 'active',
         createdAt: new Date().toISOString()
       }
 
-      // 🔴 រក្សាទុកចូល Firestore Database ( Collection 'user' ឬ 'owner' )
       if (db) {
         await setDoc(doc(db as any, targetCollection, uid), newUserPayload)
       }
@@ -105,7 +110,7 @@ export const useAuth = () => {
     }
   }
 
-  // 2. មុខងារ Login
+  // 2. Login Function
   const login = async (credentials: { email: string; password?: string; role?: string }) => {
     const { $auth: auth, $db: db } = useNuxtApp()
 
@@ -115,10 +120,10 @@ export const useAuth = () => {
     try {
       let loggedUser: any = {
         id: '',
-        name: isAdminUser ? 'Yoem Makara' : 'User Account',
+        name: isAdminUser ? 'Yoem Makara' : (roleValue === 'owner' ? 'Hotel Owner' : 'User Account'),
         email: credentials.email,
         role: roleValue,
-        permissions: isAdminUser ? ['all'] : ['read'],
+        permissions: isAdminUser ? ['all'] : (roleValue === 'owner' ? ['read', 'write', 'manage_hotels'] : ['read']),
         avatar: '',
         phone: ''
       }
@@ -137,7 +142,7 @@ export const useAuth = () => {
         const userDoc = profileDocuments[1]?.status === 'fulfilled' ? profileDocuments[1].value : null
         const ownerDoc = profileDocuments[2]?.status === 'fulfilled' ? profileDocuments[2].value : null
         
-        const profileDoc = adminDoc?.exists() ? adminDoc : (userDoc?.exists() ? userDoc : ownerDoc)
+        const profileDoc = adminDoc?.exists() ? adminDoc : (ownerDoc?.exists() ? ownerDoc : userDoc)
 
         if (profileDoc?.exists()) {
           const userDataFromDb = profileDoc.data() as any
@@ -146,18 +151,20 @@ export const useAuth = () => {
             ...userDataFromDb,
             email: userDataFromDb?.email || credentials.email,
             role: resolveRole(userDataFromDb?.role),
-            permissions: userDataFromDb?.permissions || (isAdminRole(userDataFromDb?.role) ? ['all'] : ['read'])
+            permissions: userDataFromDb?.permissions || (isAdminRole(userDataFromDb?.role) ? ['all'] : (userDataFromDb?.role === 'owner' ? ['read', 'write', 'manage_hotels'] : ['read']))
           }
         }
       } else {
         throw new Error('Authentication service is unavailable.')
       }
 
-      // រក្សាទុកក្នុង State & LocalStorage
       setUserSession(loggedUser)
 
+      // Role-based route direction
       if (isAdminRole(loggedUser.role)) {
         return navigateTo('/admin')
+      } else if (loggedUser.role === 'owner') {
+        return navigateTo('/Owner/owner_dashboard')
       } else {
         return navigateTo('/dashboard')
       }
@@ -167,7 +174,7 @@ export const useAuth = () => {
     }
   }
 
-  // 3. មុខងារ Logout
+  // 3. Logout Function
   const logout = async () => {
     const { $auth: auth } = useNuxtApp()
     if (auth) {
@@ -186,6 +193,7 @@ export const useAuth = () => {
     user,
     isLoggedIn,
     isAdmin,
+    isOwner,
     updateUser,
     register,
     login,
