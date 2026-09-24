@@ -230,7 +230,7 @@ onMounted(() => {
       <!-- Header Section -->
       <div class="bg-white rounded-2xl p-6 border border-slate-300 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Reports & Analytics</h1>
+          <h1 class="text-3xl font-serif font-bold text-slate-900 tracking-tight">Reports & Analytics</h1>
           <p class="text-sm text-slate-500 mt-1">Real-time revenue, booking performance, and registered user growth.</p>
         </div>
         <div class="flex items-center gap-3">

@@ -43,19 +43,19 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs">
           <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Gross Revenue</span>
-          <div class="text-3xl font-serif font-bold text-gray-900 mt-2">${{ grossRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+          <div class="text-3xl font-bold text-gray-900 mt-2">${{ grossRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
           <div class="text-xs text-emerald-600 mt-1 font-medium">↑ Gross earnings before platform fee</div>
         </div>
 
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs">
           <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Net Payout Received</span>
-          <div class="text-3xl font-serif font-bold text-emerald-700 mt-2">${{ netPayoutReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+          <div class="text-3xl font-bold text-emerald-700 mt-2">${{ netPayoutReceived.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
           <div class="text-xs text-gray-400 mt-1">After 15% platform commission</div>
         </div>
 
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs">
           <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pending Payout</span>
-          <div class="text-3xl font-serif font-bold text-amber-600 mt-2">${{ pendingPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
+          <div class="text-3xl font-bold text-amber-600 mt-2">${{ pendingPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</div>
           <div class="text-xs text-gray-400 mt-1">
             {{ pendingCount }} pending reservation(s)
           </div>

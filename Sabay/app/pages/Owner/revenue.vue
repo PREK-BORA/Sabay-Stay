@@ -45,7 +45,7 @@
         <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-xs">
           <span class="text-xs text-gray-400 font-semibold block mb-2 uppercase tracking-wide">Total Gross Earnings</span>
           <div class="flex items-baseline justify-between">
-            <h3 class="text-3xl font-serif font-bold text-gray-900">${{ totalEarnings.toLocaleString() }}</h3>
+            <h3 class="text-3xl font-bold text-gray-900">${{ totalEarnings.toLocaleString() }}</h3>
             <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-2 py-0.5 rounded-full">Gross</span>
           </div>
         </div>
@@ -53,14 +53,14 @@
         <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-xs">
           <span class="text-xs text-gray-400 font-semibold block mb-2 uppercase tracking-wide">Net Payouts (90%)</span>
           <div class="flex items-baseline justify-between">
-            <h3 class="text-3xl font-serif font-bold text-gray-900">${{ netPayouts.toLocaleString() }}</h3>
+            <h3 class="text-3xl  font-bold text-gray-900">${{ netPayouts.toLocaleString() }}</h3>
             <span class="text-xs text-indigo-600 font-medium bg-indigo-50 px-2 py-0.5 rounded-full">After 10% Fee</span>
           </div>
         </div>
 
         <div class="bg-white p-5 rounded-xl border border-gray-100 shadow-xs">
           <span class="text-xs text-gray-400 font-semibold block mb-2 uppercase tracking-wide">Pending Earnings</span>
-          <h3 class="text-3xl font-serif font-bold text-amber-600">${{ pendingEarnings.toLocaleString() }}</h3>
+          <h3 class="text-3xl  font-bold text-amber-600">${{ pendingEarnings.toLocaleString() }}</h3>
           <p class="text-xs text-gray-400 mt-1">
             {{ pendingBookingsCount }} unconfirmed/pending reservation(s)
           </p>

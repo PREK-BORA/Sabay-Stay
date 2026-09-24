@@ -289,7 +289,7 @@ const stats = computed(() => [
     <!-- Top Banner with Search -->
     <div class="bg-white rounded-2xl p-6 border border-slate-300 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
       <div>
-        <h1 class="text-3xl font-bold text-slate-900 tracking-tight">
+        <h1 class="text-3xl font-serif font-bold text-slate-900 tracking-tight">
           Dashboard
         </h1>
         <p class="text-sm text-slate-500 mt-1">

@@ -109,14 +109,8 @@ const navLinks = [
     <!-- Main Content Wrapper -->
     <div class="flex-1 ml-64 flex flex-col min-h-screen bg-white">
       <!-- Top Header -->
-      <header class="h-20 bg-white/80 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-10 border-b border-slate-200 shadow-2xs">
-        <div class="w-80">
-          <input
-            type="text"
-            placeholder="Search..."
-            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[#1d1b4b] shadow-inner"
-          />
-        </div>
+      <header class="h-20 bg-white/80 backdrop-blur-md px-8 flex items-center justify-end sticky top-0 z-10 border-b border-slate-200 shadow-2xs">
+
 
         <div class="flex items-center gap-4">
           <!-- Notification Button -->

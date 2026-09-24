@@ -40,24 +40,24 @@
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs">
           <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Average Rating</span>
           <div class="flex items-baseline gap-2 mt-2">
-            <span class="text-3xl font-serif font-bold text-gray-900">{{ averageRating }}</span>
+            <span class="text-3xl font-bold text-gray-900">{{ averageRating }}</span>
             <span class="text-xs text-emerald-600 font-medium">★ Overall</span>
           </div>
         </div>
 
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs">
           <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Reviews</span>
-          <div class="text-3xl font-serif font-bold text-gray-900 mt-2">{{ filteredReviews.length }}</div>
+          <div class="text-3xl font-bold text-gray-900 mt-2">{{ filteredReviews.length }}</div>
         </div>
 
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs">
           <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Response Rate</span>
-          <div class="text-3xl font-serif font-bold text-gray-900 mt-2">{{ responseRate }}%</div>
+          <div class="text-3xl font-bold text-gray-900 mt-2">{{ responseRate }}%</div>
         </div>
 
         <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-xs">
           <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Pending Replies</span>
-          <div class="text-3xl font-serif font-bold text-indigo-950 mt-2">{{ pendingRepliesCount }}</div>
+          <div class="text-3xl font-bold text-indigo-950 mt-2">{{ pendingRepliesCount }}</div>
         </div>
       </div>
 

@@ -182,8 +182,8 @@ onMounted(() => {
       <!-- Header Section -->
       <div class="bg-white rounded-2xl p-6 border border-slate-300 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 class="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <Settings class="w-7 h-7 text-[#1d1b4b]" />
+          <h1 class="text-3xl font-serif font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Settings class=" w-7 h-7 text-[#1d1b4b]" />
             System Settings
           </h1>
           <p class="text-sm text-slate-500 mt-1">Manage system configurations, administrator profile, security, and notification preferences.</p>
