@@ -6,6 +6,7 @@ import {
   doc, 
   getDocs, 
   onSnapshot, 
+  or,
   query, 
   serverTimestamp, 
   where, 
@@ -112,6 +113,7 @@ function loadHotel() {
   stopRoomsListener?.();
   hotel.value = null;
   rooms.value = [];
+  selectedRoomId.value = "";
   error.value = "";
   loading.value = true;
 
@@ -131,7 +133,7 @@ function loadHotel() {
       }
 
       const data = snapshot.data();
-      hotel.value = {
+      const loadedHotel: HotelDetails = {
         id: snapshot.id,
         name: String(data.name || "Unnamed hotel"),
         location: String(data.location || data.city || "Location not specified"),
@@ -144,37 +146,48 @@ function loadHotel() {
         amenities: asStringList(data.amenities),
         badge: data.region || data.badge || undefined,
       };
+      hotel.value = loadedHotel;
       loading.value = false;
+
+      // Listen to rooms matching EITHER hotelId OR hotelName
+      stopRoomsListener?.();
+      stopRoomsListener = onSnapshot(
+        query(
+          collection(db, "rooms"), 
+          or(
+            where("hotelId", "==", hotelId.value),
+            where("hotelName", "==", loadedHotel.name)
+          )
+        ),
+        (roomSnapshot) => {
+          rooms.value = roomSnapshot.docs.map((room) => {
+            const roomData = room.data();
+            return {
+              id: room.id,
+              title: String(roomData.title || roomData.type || "Room"),
+              type: String(roomData.type || "Room"),
+              price: Number(roomData.price || 0),
+              status: String(roomData.status || "Available"),
+              beds: String(roomData.beds || "Bed details available on request"),
+              capacity: Number(roomData.capacity || 1),
+              size: String(roomData.size || ""),
+              amenity: String(roomData.amenity || ""),
+              description: String(roomData.description || ""),
+              image: cleanImage(roomData.image),
+            };
+          });
+          if (!rooms.value.some((room) => room.id === selectedRoomId.value)) {
+            selectedRoomId.value = rooms.value[0]?.id || "";
+          }
+        },
+        () => {
+          rooms.value = [];
+        },
+      );
     },
     () => {
       error.value = "We could not load this hotel right now.";
       loading.value = false;
-    },
-  );
-
-  stopRoomsListener = onSnapshot(
-    query(collection(db, "rooms"), where("hotelId", "==", hotelId.value)),
-    (snapshot) => {
-      rooms.value = snapshot.docs.map((room) => {
-        const data = room.data();
-        return {
-          id: room.id,
-          title: String(data.title || data.type || "Room"),
-          type: String(data.type || "Room"),
-          price: Number(data.price || 0),
-          status: String(data.status || "Available"),
-          beds: String(data.beds || "Bed details available on request"),
-          capacity: Number(data.capacity || 1),
-          size: String(data.size || ""),
-          amenity: String(data.amenity || ""),
-          description: String(data.description || ""),
-          image: cleanImage(data.image),
-        };
-      });
-      if (!selectedRoomId.value && rooms.value[0]) selectedRoomId.value = rooms.value[0].id;
-    },
-    () => {
-      rooms.value = [];
     },
   );
 }
@@ -212,7 +225,6 @@ async function bookNow() {
     return;
   }
 
-  // Local constants capture state for safe usage across async calls
   const currentHotel = hotel.value;
   const room = selectedRoom.value;
   isBooking.value = true;

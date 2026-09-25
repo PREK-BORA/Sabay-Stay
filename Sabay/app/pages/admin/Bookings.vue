@@ -8,6 +8,8 @@ import {
   addDoc,
   onSnapshot, 
   query, 
+  where,
+  getDocs,
   serverTimestamp 
 } from 'firebase/firestore'
 import { definePageMeta, useNuxtApp } from '#imports'
@@ -16,6 +18,9 @@ definePageMeta({
   layout: 'admin',
   middleware: 'admin'
 })
+
+// Fix: Extract nuxtApp at the top level to avoid context loss after async/await operations
+const nuxtApp = useNuxtApp()
 
 const bookings = ref([])
 const selectedStatus = ref('All')
@@ -50,7 +55,6 @@ const formatDate = (dateVal) => {
   return String(dateVal)
 }
 
-// Robust price parsing to handle numbers, strings (e.g. "$185"), or missing values
 const parsePrice = (data) => {
   const rawPrice = 
     data?.totalPrice ?? 
@@ -80,7 +84,6 @@ const formatPrice = (value) => {
 }
 
 const getDb = () => {
-  const nuxtApp = useNuxtApp()
   return nuxtApp.$db || null
 }
 
@@ -143,7 +146,6 @@ const changeStatus = async (id, newStatus) => {
   const db = getDb()
 
   if (!db || !targetId) return
-  if (!confirm(`Are you sure you want to change the status to "${newStatus}"?`)) return
 
   actionLoadingId.value = targetId
 
@@ -156,10 +158,25 @@ const changeStatus = async (id, newStatus) => {
     })
 
     const booking = bookings.value.find((item) => item.id === targetId)
-    const nuxtApp = useNuxtApp()
+    
+    // Fix: Using the top-level nuxtApp reference, as useNuxtApp() will throw an error if called after `await`
     const authUser = nuxtApp.$auth?.currentUser
     const actorId = authUser?.uid || 'admin'
-    const targetUserId = booking?.userId || ''
+    
+    let targetUserId = booking?.userId || ''
+
+    if (!targetUserId && booking?.guestEmail) {
+      try {
+        const usersRef = collection(db, 'users')
+        const qUsers = query(usersRef, where('email', '==', booking.guestEmail))
+        const userSnap = await getDocs(qUsers)
+        if (!userSnap.empty) {
+          targetUserId = userSnap.docs[0].id
+        }
+      } catch (err) {
+        console.error('Could not resolve user by email:', err)
+      }
+    }
     
     if (targetUserId) {
       const hotel = booking?.hotelName || 'SabayStay'
@@ -240,7 +257,6 @@ const filteredBookings = computed(() => {
   return list
 })
 
-// Pagination logic
 const totalPages = computed(() => {
   return Math.ceil(filteredBookings.value.length / itemsPerPage.value) || 1
 })
@@ -251,12 +267,10 @@ const paginatedBookings = computed(() => {
   return filteredBookings.value.slice(start, end)
 })
 
-// Reset page when filters change
 watch([searchQuery, selectedStatus, itemsPerPage], () => {
   currentPage.value = 1
 })
 
-// Export CSV function
 const exportCSV = () => {
   if (!filteredBookings.value.length) {
     alert('No data available to export.')
@@ -266,23 +280,28 @@ const exportCSV = () => {
   const headers = ['Ref', 'Hotel Name', 'Guest Name', 'Guest Email', 'Check-In', 'Check-Out', 'Total Price ($)', 'Status']
   const rows = filteredBookings.value.map(b => [
     `"${b.ref || b.id}"`,
-    `"${b.hotelName.replace(/"/g, '""')}"`,
-    `"${b.guestName.replace(/"/g, '""')}"`,
-    `"${b.guestEmail.replace(/"/g, '""')}"`,
+    `"${(b.hotelName || '').replace(/"/g, '""')}"`,
+    `"${(b.guestName || '').replace(/"/g, '""')}"`,
+    `"${(b.guestEmail || '').replace(/"/g, '""')}"`,
     `"${b.checkIn}"`,
     `"${b.checkOut}"`,
     b.totalPrice,
     `"${b.status}"`
   ])
 
-  const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
-  const encodedUri = encodeURI(csvContent)
+  const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n')
+  
+  // Fix: Use Blob instead of encodeURI. Special characters like '#' (common in IDs) break encodeURI string downloads
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
-  link.setAttribute('href', encodedUri)
+  
+  link.setAttribute('href', url)
   link.setAttribute('download', `bookings_export_${new Date().toISOString().split('T')[0]}.csv`)
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
+  URL.revokeObjectURL(url)
 }
 
 onMounted(() => {
@@ -343,7 +362,7 @@ onUnmounted(() => {
       <!-- Bookings Table Wrapper -->
       <div class="bg-white rounded-2xl border border-slate-300 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse min-w-175">
+          <table class="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-300 text-[11px] text-slate-500 uppercase tracking-wider font-bold">
                 <th class="py-3.5 px-6">Ref</th>
@@ -444,7 +463,7 @@ onUnmounted(() => {
                     title="Delete Booking"
                     class="p-1.5 bg-white hover:bg-red-50 text-slate-400 hover:text-red-600 border border-slate-200 hover:border-red-200 rounded-lg transition-colors cursor-pointer inline-flex items-center justify-center align-middle disabled:opacity-50"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
@@ -469,7 +488,7 @@ onUnmounted(() => {
           </table>
         </div>
 
-        <!-- Pagination Controls Bar -->
+        <!-- Pagination Controls -->
         <div v-if="!loading && filteredBookings.length > 0" class="px-6 py-4 bg-slate-50 border-t border-slate-300 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-600">
           <div class="flex items-center gap-2">
             <span>Show</span>
